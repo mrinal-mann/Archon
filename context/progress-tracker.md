@@ -9,7 +9,7 @@ change.
 
 ## Current Goal
 
-- Editor shell foundation from `context/features-specs/02-editor.md` is implemented.
+- Auth feature from `context/features-specs/03-auth.md` is implemented.
 
 ## Completed
 
@@ -24,6 +24,14 @@ change.
 - Added `components/editor/project-sidebar.tsx` with a floating, slide-in project sidebar, tabs, empty states, close action, and bottom `New Project` action.
 - Confirmed the generated shadcn dialog primitives already provide the future dialog pattern pieces: title, description, and footer actions using theme tokens.
 - Verified `npm.cmd run lint` and `npm.cmd run build` pass after the editor shell implementation.
+- Installed `@clerk/nextjs` and `@clerk/ui` for authentication.
+- Added Clerk sign-in/sign-up URL env vars to `.env`.
+- Created `proxy.ts` at project root using `clerkMiddleware` and `createRouteMatcher`; all routes protected except `/sign-in` and `/sign-up`.
+- Wrapped root layout with `ClerkProvider` using `@clerk/ui/themes` `dark` theme and CSS variable overrides (no hardcoded colors).
+- Created `app/sign-in/[[...sign-in]]/page.tsx` and `app/sign-up/[[...sign-up]]/page.tsx` with a minimal two-panel layout: left info panel on large screens, Clerk form on right; form only on small screens.
+- Updated `app/page.tsx` to redirect authenticated users to `/editor` and unauthenticated users to `/sign-in`.
+- Added Clerk `UserButton` to the editor navbar right section.
+- Verified `npm run build` passes.
 
 ## In Progress
 
@@ -45,6 +53,11 @@ change.
   `app/globals.css`; the application is dark-only by default.
 - Editor chrome components live under `components/editor/` and are controlled
   by parent state so future editor screens can own sidebar behavior.
+- Auth uses Clerk via `@clerk/nextjs`; middleware lives in `proxy.ts` (not
+  `middleware.ts`) per project spec. Public routes are `/sign-in(.*)` and
+  `/sign-up(.*)`; everything else is protected.
+- Clerk appearance uses `theme: dark` from `@clerk/ui/themes` with CSS variable
+  overrides mapped to the app's semantic tokens; no hardcoded colors.
 
 ## Session Notes
 
@@ -53,3 +66,6 @@ change.
 - 2026-05-10: PowerShell blocks npm/npx `.ps1` shims on this machine; use `npm.cmd` and `npx.cmd` for commands.
 - 2026-05-10: Began `02-editor.md`; required context files and AGENTS.md were read before implementation.
 - 2026-05-10: Completed `02-editor.md`; editor navbar and project sidebar compile cleanly, and existing dialog primitives cover the future dialog pattern.
+- 2026-05-17: Began `03-auth.md`; all required context files and AGENTS.md were read before implementation.
+- 2026-05-17: `@clerk/ui/themes` dark theme uses `theme:` prop (not `baseTheme:`) inside `ClerkProvider` appearance; valid variable keys are `colorForeground`, `colorMutedForeground`, `colorInput`, etc.
+- 2026-05-17: Completed `03-auth.md`; all routes protected, auth pages use CSS variables, `ClerkProvider` wraps root layout, `npm run build` passes.

@@ -2,6 +2,7 @@
 
 import * as React from "react"
 import { PanelLeftClose, PanelLeftOpen } from "lucide-react"
+import { UserButton } from "@clerk/nextjs"
 
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
@@ -45,7 +46,9 @@ export function EditorNavbar({
         {centerContent}
       </div>
 
-      <div className="flex min-w-0 items-center justify-end" aria-hidden="true" />
+      <div className="flex min-w-0 items-center justify-end">
+        <UserButton />
+      </div>
     </header>
   )
 }
