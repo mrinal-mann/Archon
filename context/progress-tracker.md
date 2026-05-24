@@ -9,7 +9,7 @@ change.
 
 ## Current Goal
 
-- Auth feature from `context/features-specs/03-auth.md` is implemented.
+- Project dialog feature from `context/features-specs/04-project-dialog.md` is implemented.
 
 ## Completed
 
@@ -32,6 +32,12 @@ change.
 - Updated `app/page.tsx` to redirect authenticated users to `/editor` and unauthenticated users to `/sign-in`.
 - Added Clerk `UserButton` to the editor navbar right section.
 - Verified `npm run build` passes.
+- Added editor home screen with centered heading, description, and `New Project` button (`app/editor/page.tsx`).
+- Created `hooks/use-project-dialog.ts` managing dialog state, form name, live slug, and loading state.
+- Created `components/editor/project-dialogs.tsx` with `CreateProjectDialog` (name input + live slug preview), `RenameProjectDialog` (prefilled, auto-focuses, Enter submits), and `DeleteProjectDialog` (destructive confirm, no input).
+- Updated `components/editor/project-sidebar.tsx`: project items for owned/shared, rename/delete actions shown only for owned projects, mobile backdrop scrim (`lg:hidden`) that closes sidebar on tap.
+- Wired all dialog triggers: editor home `New Project`, sidebar `New Project` → Create; sidebar rename/delete icons → respective dialogs.
+- Verified `npm run build` passes with no TypeScript or lint errors.
 
 ## In Progress
 
@@ -69,3 +75,5 @@ change.
 - 2026-05-17: Began `03-auth.md`; all required context files and AGENTS.md were read before implementation.
 - 2026-05-17: `@clerk/ui/themes` dark theme uses `theme:` prop (not `baseTheme:`) inside `ClerkProvider` appearance; valid variable keys are `colorForeground`, `colorMutedForeground`, `colorInput`, etc.
 - 2026-05-17: Completed `03-auth.md`; all routes protected, auth pages use CSS variables, `ClerkProvider` wraps root layout, `npm run build` passes.
+- 2026-05-24: Began `04-project-dialog.md`; all required context files and AGENTS.md were read before implementation.
+- 2026-05-24: Completed `04-project-dialog.md`; editor home screen, three dialogs, sidebar actions, and mobile backdrop all implemented with mock data only; `npm run build` passes.
