@@ -1,5 +1,6 @@
 "use client"
 
+import Link from "next/link"
 import { Pencil, Plus, Trash2, X } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
@@ -11,6 +12,7 @@ type ProjectSidebarProps = {
   isOpen: boolean
   onClose: () => void
   projects: Project[]
+  activeProjectId?: string
   onCreateProject: () => void
   onRenameProject: (project: Project) => void
   onDeleteProject: (project: Project) => void
@@ -27,17 +29,36 @@ function EmptyProjectState() {
 
 type ProjectItemProps = {
   project: Project
+  isActive: boolean
   showActions: boolean
   onRename: (project: Project) => void
   onDelete: (project: Project) => void
 }
 
-function ProjectItem({ project, showActions, onRename, onDelete }: ProjectItemProps) {
+function ProjectItem({
+  project,
+  isActive,
+  showActions,
+  onRename,
+  onDelete,
+}: ProjectItemProps) {
   return (
-    <div className="group flex items-center gap-1 rounded-md px-2 py-1.5 hover:bg-muted/20">
-      <span className="min-w-0 flex-1 truncate text-sm text-foreground">
+    <div
+      className={cn(
+        "group flex items-center gap-1 rounded-md px-2 py-1.5 hover:bg-muted/20",
+        isActive && "bg-muted/30"
+      )}
+    >
+      <Link
+        href={`/editor/${project.id}`}
+        aria-current={isActive ? "page" : undefined}
+        className={cn(
+          "min-w-0 flex-1 truncate text-sm text-foreground",
+          isActive && "font-medium"
+        )}
+      >
         {project.name}
-      </span>
+      </Link>
       {showActions && (
         <div className="flex shrink-0 items-center gap-0.5 opacity-0 transition-opacity group-hover:opacity-100">
           <Button
@@ -68,6 +89,7 @@ export function ProjectSidebar({
   isOpen,
   onClose,
   projects,
+  activeProjectId,
   onCreateProject,
   onRenameProject,
   onDeleteProject,
@@ -124,6 +146,7 @@ export function ProjectSidebar({
                   <ProjectItem
                     key={project.id}
                     project={project}
+                    isActive={project.id === activeProjectId}
                     showActions
                     onRename={onRenameProject}
                     onDelete={onDeleteProject}
@@ -141,6 +164,7 @@ export function ProjectSidebar({
                   <ProjectItem
                     key={project.id}
                     project={project}
+                    isActive={project.id === activeProjectId}
                     showActions={false}
                     onRename={onRenameProject}
                     onDelete={onDeleteProject}

@@ -9,7 +9,8 @@ change.
 
 ## Current Goal
 
-- Editor home is wired to the real project API (`context/features-specs/07-wire-editor-home.md`).
+- Share dialog with collaborator management
+  (`context/features-specs/09-share-dialog.md`).
 
 ## Completed
 
@@ -53,6 +54,18 @@ change.
 - Updated `POST /api/projects` to accept an optional `id` so the project id stays aligned with the Liveblocks room id; falls back to the schema's `cuid()` default when absent.
 - Wired sidebar and dialogs to the hook; create dialog shows the room ID preview, rename pre-fills the current name, delete shows the project name. Removed mock project data.
 - Verified `npm run build` passes.
+- Added `lib/project-access.ts` with `getCurrentIdentity()` (Clerk `userId` + primary email, null when unauthenticated) and `getProjectAccess(projectId, identity)` (returns the project + role for an owner or email-matched collaborator, else null).
+- Added `components/editor/access-denied.tsx`: centered layout, lock icon, short message, and a `Back to editor` link to `/editor`.
+- Built `app/editor/[roomId]/page.tsx` as a server component: unauthenticated users `redirect("/sign-in")`, missing or unauthorized projects render `AccessDenied`, otherwise it loads the user's projects and renders the workspace shell.
+- Added `components/editor/editor-workspace.tsx` client shell: navbar shows the project name with share + AI-toggle actions, floating `ProjectSidebar` on the left with the current room highlighted, a central canvas placeholder (`bg-background`, centered message) filling the remaining space, and a toggleable right placeholder for the future AI chat. Project mutations run through `useProjectActions({ activeProjectId })`.
+- Extended `components/editor/editor-navbar.tsx` with an optional `actions` slot (rendered before `UserButton`).
+- Updated `components/editor/project-sidebar.tsx`: project items are now `next/link` links to `/editor/[id]` and accept `activeProjectId` to highlight the current room (`aria-current`, accent background, medium weight).
+- Verified `npm run build` passes with the `/editor/[roomId]` route registered and no TypeScript errors.
+- Added `lib/collaborators.ts` with `enrichCollaborators(emails)`: looks up the emails via the Clerk Backend API (`clerkClient().users.getUserList({ emailAddress })`) and returns `{ email, name, imageUrl }` per email, preserving input order and falling back to email-only when no Clerk user matches or the lookup fails. No local user table.
+- Added `app/api/projects/[projectId]/collaborators/route.ts`: `GET` lists collaborators (owner or collaborator, via `getProjectAccess`) enriched through Clerk; `POST` invites by email (owner-only, validated, idempotent `upsert` on `projectId_email`); `DELETE` removes by `?email=` query (owner-only). Returns `401`/`403`/`404`/`400` consistently and enforces ownership server-side for invite/remove.
+- Added `components/editor/share-dialog.tsx`: copy-link row with temporary `Copied!` feedback for all roles; owners get an invite-by-email field and per-collaborator remove buttons; collaborators see the list read-only. Collaborator rows show Clerk avatar + name with email fallback. Loads the list on open and shows loading/empty/error states.
+- Wired the navbar `Share` button in `components/editor/editor-workspace.tsx` to open the dialog; threaded `role` from the page through to set `isOwner`. Updated `app/editor/[roomId]/page.tsx` to pass `role={access.role}`.
+- Verified `npm run build` passes with the `/api/projects/[projectId]/collaborators` route registered and no TypeScript errors.
 
 ## In Progress
 
@@ -107,3 +120,11 @@ change.
 - 2026-06-06: Shared projects are resolved by the Clerk user's email against `ProjectCollaborator`, so the data helper uses `currentUser()` (not just `auth()`) to read the primary email.
 - 2026-06-06: Project id is now set from the client-generated room id (`slug-suffix`) on create to keep the project id and Liveblocks room id aligned; `POST /api/projects` accepts an optional `id` and falls back to `cuid()`.
 - 2026-06-06: Completed `07-wire-editor-home.md`; editor home is a server component fed by `lib/projects.ts`, mutations run through `hooks/use-project-actions.ts`, dialogs/sidebar wired to real data, `npm run build` passes.
+- 2026-06-06: Began `08-editor-workspace-shell.md`; all required context files were read before implementation.
+- 2026-06-06: Access checks live in `lib/project-access.ts` (outside the page); the collaborator lookup uses the `projectId_email` compound-unique index. The floating `ProjectSidebar` is reused as-is, so the canvas spans full width with the sidebar overlaying on open.
+- 2026-06-06: Completed `08-editor-workspace-shell.md`; `/editor/[roomId]` is a server component with auth redirect + `AccessDenied`, the workspace shell renders with current project context, no canvas/Liveblocks/AI/sharing behavior yet, `npm run build` passes.
+- 2026-06-06: Began `09-share-dialog.md`; all required context files were read before implementation.
+- 2026-06-06: Clerk enrichment uses `await clerkClient()` then `users.getUserList({ emailAddress, limit: 500 })`; emails are matched case-insensitively against every Clerk email address, with email-only fallback when unmatched. Collaborators remain stored only in `ProjectCollaborator` (no local user table).
+- 2026-06-06: Collaborator removal is keyed by the `?email=` query param on `DELETE` (no separate collaborator-id route); invite uses an idempotent `upsert` so re-inviting is a no-op. The share dialog reuses the read access from `getProjectAccess` for listing and enforces owner-only invite/remove server-side.
+- 2026-06-06: Completed `09-share-dialog.md`; share dialog opens from the workspace navbar, owners can invite/remove collaborators, collaborators get read-only access, names/avatars load from Clerk when available, `npm run build` passes.
+- 2026-06-06: UI revision to match the provided mockup — `GET /collaborators` now also returns the Clerk-enriched `owner` (via new `enrichOwner(userId)`); the dialog renders a single "People with access" list (owner first) with `Owner`/`Collaborator` outline badges and a "{n} total" count, plus a "Workspace link" card with a "Copy link" button. Owner row has no remove action. Badges use theme tokens (no hardcoded teal) to respect the dark-only design system.

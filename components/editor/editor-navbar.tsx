@@ -11,6 +11,7 @@ type EditorNavbarProps = {
   isSidebarOpen: boolean
   onSidebarToggle: () => void
   centerContent?: React.ReactNode
+  actions?: React.ReactNode
   className?: string
 }
 
@@ -18,6 +19,7 @@ export function EditorNavbar({
   isSidebarOpen,
   onSidebarToggle,
   centerContent,
+  actions,
   className,
 }: EditorNavbarProps) {
   const SidebarIcon = isSidebarOpen ? PanelLeftClose : PanelLeftOpen
@@ -46,7 +48,8 @@ export function EditorNavbar({
         {centerContent}
       </div>
 
-      <div className="flex min-w-0 items-center justify-end">
+      <div className="flex min-w-0 items-center justify-end gap-1">
+        {actions}
         <UserButton />
       </div>
     </header>
