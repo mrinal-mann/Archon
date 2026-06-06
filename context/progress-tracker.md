@@ -9,7 +9,7 @@ change.
 
 ## Current Goal
 
-- Project dialog feature from `context/features-specs/04-project-dialog.md` is implemented.
+- Prisma data models feature from `context/features-specs/05-prisma.md` is implemented.
 
 ## Completed
 
@@ -38,6 +38,10 @@ change.
 - Updated `components/editor/project-sidebar.tsx`: project items for owned/shared, rename/delete actions shown only for owned projects, mobile backdrop scrim (`lg:hidden`) that closes sidebar on tap.
 - Wired all dialog triggers: editor home `New Project`, sidebar `New Project` → Create; sidebar rename/delete icons → respective dialogs.
 - Verified `npm run build` passes with no TypeScript or lint errors.
+- Added `prisma/models/project.prisma` with the `ProjectStatus` enum (`DRAFT`, `ARCHIVED`), `Project` model (ownerId → Clerk user, name, optional description, status, `canvasJsonPath`, timestamps, indexes on `ownerId` and `createdAt`), and `ProjectCollaborator` model (project relation with cascade delete, email, createdAt, unique `[projectId, email]`, indexes on `email` and `[projectId, createdAt]`).
+- Added `lib/prisma.ts` as a cached singleton: branches on `DATABASE_URL` — `prisma+postgres://` uses Accelerate (`accelerateUrl`), otherwise direct `@prisma/adapter-pg`; caches on `global` outside production.
+- Ran first migration `20260606140113_init_project_models` and generated the client to `generated/prisma`.
+- Verified `npm run build` passes.
 
 ## In Progress
 
@@ -64,6 +68,10 @@ change.
   `/sign-up(.*)`; everything else is protected.
 - Clerk appearance uses `theme: dark` from `@clerk/ui/themes` with CSS variable
   overrides mapped to the app's semantic tokens; no hardcoded colors.
+- Prisma uses the multi-file schema folder (`prisma/`); models live in
+  `prisma/models/*.prisma`. The `prisma-client` generator emits to
+  `generated/prisma`; the app imports the client only through the
+  `lib/prisma.ts` singleton, never the generated path directly.
 
 ## Session Notes
 
@@ -77,3 +85,7 @@ change.
 - 2026-05-17: Completed `03-auth.md`; all routes protected, auth pages use CSS variables, `ClerkProvider` wraps root layout, `npm run build` passes.
 - 2026-05-24: Began `04-project-dialog.md`; all required context files and AGENTS.md were read before implementation.
 - 2026-05-24: Completed `04-project-dialog.md`; editor home screen, three dialogs, sidebar actions, and mobile backdrop all implemented with mock data only; `npm run build` passes.
+- 2026-06-06: Began `05-prisma.md`; all required context files were read before implementation.
+- 2026-06-06: The Prisma 7 `prisma-client` generator accepts either `{ adapter }` or `{ accelerateUrl }` in the client constructor, so the Accelerate branch needs no `@prisma/extension-accelerate` package.
+- 2026-06-06: Active `DATABASE_URL` is a direct `postgres://` (Prisma Postgres pooled), so the live path uses the `@prisma/adapter-pg` adapter branch.
+- 2026-06-06: Completed `05-prisma.md`; models, singleton, and first migration are in place; `npm run build` passes.
