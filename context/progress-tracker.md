@@ -9,7 +9,7 @@ change.
 
 ## Current Goal
 
-- Prisma data models feature from `context/features-specs/05-prisma.md` is implemented.
+- Editor home is wired to the real project API (`context/features-specs/07-wire-editor-home.md`).
 
 ## Completed
 
@@ -41,6 +41,17 @@ change.
 - Added `prisma/models/project.prisma` with the `ProjectStatus` enum (`DRAFT`, `ARCHIVED`), `Project` model (ownerId → Clerk user, name, optional description, status, `canvasJsonPath`, timestamps, indexes on `ownerId` and `createdAt`), and `ProjectCollaborator` model (project relation with cascade delete, email, createdAt, unique `[projectId, email]`, indexes on `email` and `[projectId, createdAt]`).
 - Added `lib/prisma.ts` as a cached singleton: branches on `DATABASE_URL` — `prisma+postgres://` uses Accelerate (`accelerateUrl`), otherwise direct `@prisma/adapter-pg`; caches on `global` outside production.
 - Ran first migration `20260606140113_init_project_models` and generated the client to `generated/prisma`.
+- Verified `npm run build` passes.
+- Added `app/api/projects/route.ts` with `GET` (list current user's projects, scoped by `ownerId`, ordered by `createdAt` desc) and `POST` (create; defaults missing/blank name to `Untitled Project`, uses schema's `cuid()` id strategy, returns `201`).
+- Added `app/api/projects/[projectId]/route.ts` with `PATCH` (rename) and `DELETE`; both load the project, enforce owner check, and use Next 16 async `params`.
+- All routes return `401` when unauthenticated; non-owner mutations return `403`; missing projects return `404`; rename with a blank/invalid name returns `400`.
+- Backend-only; no UI wiring per spec.
+- Verified `npm run build` passes.
+- Added `lib/projects.ts` server data helper (`getUserProjects`): loads owned projects by `ownerId` and shared projects via `ProjectCollaborator` matched on the Clerk user's primary email (`currentUser()`), both ordered by `createdAt` desc; returns `{ owned, shared }` tagged with role.
+- Converted `app/editor/page.tsx` to a server component that fetches projects via the helper and passes them to the new client `components/editor/editor-home.tsx`; no client-side fetching on initial load.
+- Replaced `hooks/use-project-dialog.ts` with `hooks/use-project-actions.ts`: manages dialog state plus real create/rename/delete mutations. Create generates a short suffix, slugifies the name into a room ID (`slug-suffix`), `POST /api/projects` with that id, then navigates to `/editor/[projectId]`. Rename calls `PATCH` then `router.refresh()`. Delete calls `DELETE`, redirects to `/editor` if the active workspace was deleted, otherwise `router.refresh()`.
+- Updated `POST /api/projects` to accept an optional `id` so the project id stays aligned with the Liveblocks room id; falls back to the schema's `cuid()` default when absent.
+- Wired sidebar and dialogs to the hook; create dialog shows the room ID preview, rename pre-fills the current name, delete shows the project name. Removed mock project data.
 - Verified `npm run build` passes.
 
 ## In Progress
@@ -89,3 +100,10 @@ change.
 - 2026-06-06: The Prisma 7 `prisma-client` generator accepts either `{ adapter }` or `{ accelerateUrl }` in the client constructor, so the Accelerate branch needs no `@prisma/extension-accelerate` package.
 - 2026-06-06: Active `DATABASE_URL` is a direct `postgres://` (Prisma Postgres pooled), so the live path uses the `@prisma/adapter-pg` adapter branch.
 - 2026-06-06: Completed `05-prisma.md`; models, singleton, and first migration are in place; `npm run build` passes.
+- 2026-06-06: Began `06-project-apis.md`; all required context files were read before implementation.
+- 2026-06-06: Route handlers use `const { userId } = await auth()` from `@clerk/nextjs/server` and the `prisma` singleton; Next 16 route `params` is a Promise and must be awaited.
+- 2026-06-06: Completed `06-project-apis.md`; list/create/rename/delete routes exist, owner checks enforced, 401/403 handled, backend-only; `npm run build` passes.
+- 2026-06-06: Began `07-wire-editor-home.md`; all required context files were read before implementation.
+- 2026-06-06: Shared projects are resolved by the Clerk user's email against `ProjectCollaborator`, so the data helper uses `currentUser()` (not just `auth()`) to read the primary email.
+- 2026-06-06: Project id is now set from the client-generated room id (`slug-suffix`) on create to keep the project id and Liveblocks room id aligned; `POST /api/projects` accepts an optional `id` and falls back to `cuid()`.
+- 2026-06-06: Completed `07-wire-editor-home.md`; editor home is a server component fed by `lib/projects.ts`, mutations run through `hooks/use-project-actions.ts`, dialogs/sidebar wired to real data, `npm run build` passes.

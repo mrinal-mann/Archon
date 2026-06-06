@@ -11,12 +11,12 @@ import {
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
-import type { Project } from "@/hooks/use-project-dialog"
+import type { Project } from "@/hooks/use-project-actions"
 
 type CreateProjectDialogProps = {
   open: boolean
   name: string
-  slug: string
+  roomId: string
   isLoading: boolean
   onNameChange: (name: string) => void
   onSubmit: () => void
@@ -26,7 +26,7 @@ type CreateProjectDialogProps = {
 export function CreateProjectDialog({
   open,
   name,
-  slug,
+  roomId,
   isLoading,
   onNameChange,
   onSubmit,
@@ -53,10 +53,10 @@ export function CreateProjectDialog({
               onKeyDown={(e) => { if (e.key === "Enter" && name.trim()) onSubmit() }}
             />
           </div>
-          {slug && (
+          {roomId && (
             <p className="text-xs text-muted-foreground">
-              Slug:{" "}
-              <span className="font-mono text-foreground">{slug}</span>
+              Room ID:{" "}
+              <span className="font-mono text-foreground">{roomId}</span>
             </p>
           )}
         </div>
