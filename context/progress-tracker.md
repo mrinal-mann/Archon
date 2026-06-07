@@ -9,8 +9,8 @@ change.
 
 ## Current Goal
 
-- Share dialog with collaborator management
-  (`context/features-specs/09-share-dialog.md`).
+- Liveblocks-backed React Flow base canvas
+  (`context/features-specs/11-base-canvas.md`).
 
 ## Completed
 
@@ -66,6 +66,7 @@ change.
 - Added `components/editor/share-dialog.tsx`: copy-link row with temporary `Copied!` feedback for all roles; owners get an invite-by-email field and per-collaborator remove buttons; collaborators see the list read-only. Collaborator rows show Clerk avatar + name with email fallback. Loads the list on open and shows loading/empty/error states.
 - Wired the navbar `Share` button in `components/editor/editor-workspace.tsx` to open the dialog; threaded `role` from the page through to set `isOwner`. Updated `app/editor/[roomId]/page.tsx` to pass `role={access.role}`.
 - Verified `npm run build` passes with the `/api/projects/[projectId]/collaborators` route registered and no TypeScript errors.
+- Replaced the workspace canvas placeholder with a Liveblocks-backed React Flow canvas: shared types in `types/canvas.ts`, a `CanvasRoom` client wrapper (provider + room + suspense + error fallback), and a `Canvas` component using `useLiveblocksFlow` (suspense, empty initial state) rendering loose connections, `fitView`, dot background, and a minimap. `npm run build` passes.
 
 ## In Progress
 
@@ -128,3 +129,18 @@ change.
 - 2026-06-06: Collaborator removal is keyed by the `?email=` query param on `DELETE` (no separate collaborator-id route); invite uses an idempotent `upsert` so re-inviting is a no-op. The share dialog reuses the read access from `getProjectAccess` for listing and enforces owner-only invite/remove server-side.
 - 2026-06-06: Completed `09-share-dialog.md`; share dialog opens from the workspace navbar, owners can invite/remove collaborators, collaborators get read-only access, names/avatars load from Clerk when available, `npm run build` passes.
 - 2026-06-06: UI revision to match the provided mockup — `GET /collaborators` now also returns the Clerk-enriched `owner` (via new `enrichOwner(userId)`); the dialog renders a single "People with access" list (owner first) with `Owner`/`Collaborator` outline badges and a "{n} total" count, plus a "Workspace link" card with a "Copy link" button. Owner row has no remove action. Badges use theme tokens (no hardcoded teal) to respect the dark-only design system.
+- 2026-06-07: Began `10-liveblock-setup.md`; all required context files were read before implementation.
+- 2026-06-07: Installed `@liveblocks/node` (server SDK was missing; the React/client packages were already present). Added a `LIVEBLOCKS_SECRET_KEY` placeholder to `.env` (must be replaced with a real Liveblocks secret).
+- 2026-06-07: Configured `liveblocks.config.ts` types — `Presence` ({ cursor: {x,y} | null, isThinking }) and `UserMeta` ({ id, info: { name, avatar?, cursorColor } }). Liveblocks' built-in `IUserInfo` types `avatar?: string`, so the avatar field is optional/string-only (not `string | null`); the auth route passes `undefined` when there is no Clerk avatar.
+- 2026-06-07: Added `lib/liveblocks.ts` — `server-only` module exporting a cached `Liveblocks` node client (cached on `globalThis` outside production) and `getCursorColor(userId)`, a deterministic hash → fixed 9-color palette mapper.
+- 2026-06-07: Added `app/api/liveblocks-auth/route.ts` (`POST`) — requires Clerk auth (401), reads `room` from the body and treats it as the project id, verifies access via `getProjectAccess` (403 when unauthorized), ensures the room exists via `getRoom`/`createRoom` (create only if missing), then issues a `prepareSession` token with `FULL_ACCESS` carrying the Clerk name, avatar, and generated cursor color.
+- 2026-06-07: Completed `10-liveblock-setup.md`; `npm run build` passes with the `/api/liveblocks-auth` route registered.
+- Added shared canvas types in `types/canvas.ts`: `CanvasNodeShape`, `CanvasNodeData` ({ label, color, shape }), `CanvasEdgeData`, the `canvasNode`/`canvasEdge` type constants, and `CanvasNode`/`CanvasEdge` React Flow types.
+- Added `components/editor/canvas/canvas.tsx`: the React Flow canvas wired to Liveblocks via `useLiveblocksFlow<CanvasNode, CanvasEdge>({ suspense: true })` with empty initial nodes/edges; renders `ReactFlow` with loose connection mode, `fitView`, dot-pattern `Background`, and `MiniMap`. Imports `@xyflow/react` and `@liveblocks/react-flow` styles.
+- Added `components/editor/canvas/canvas-room.tsx`: client wrapper setting up `LiveblocksProvider` (authEndpoint `/api/liveblocks-auth`), `RoomProvider` (current room id, initial presence `{ cursor: null, isThinking: false }`), `ClientSideSuspense` with a loading state, and a class-based error boundary that renders a connection-error fallback.
+- Wired `components/editor/editor-workspace.tsx` to render `<CanvasRoom roomId={project.id} />` in place of the canvas placeholder (main is now `relative` and fills remaining space).
+- Per scope limits: no controls, no custom node/edge rendering, no persistence, no AI behavior yet.
+- Typed the Liveblocks `Storage` tree in `liveblocks.config.ts`: added `flow?: LiveblocksFlow<CanvasNode, CanvasEdge>` (default `"flow"` storage key used by `useLiveblocksFlow`). Kept it optional so `RoomProvider` does not require `initialStorage` — the hook creates the flow lazily from its `initial` option.
+- Set `colorMode="dark"` on `ReactFlow` so the canvas controls/background match the dark-only theme.
+- Removed the `MiniMap` per user request (deviates from `11-base-canvas.md`, which listed it as required); canvas now renders only the dot-pattern background.
+- Verified `npm run build` passes.

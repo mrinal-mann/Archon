@@ -1,0 +1,61 @@
+// Define Liveblocks types for your application
+// https://liveblocks.io/docs/api-reference/liveblocks-react#Typing-your-data
+import type { LiveblocksFlow } from "@liveblocks/react-flow";
+
+import type { CanvasEdge, CanvasNode } from "@/types/canvas";
+
+declare global {
+  interface Liveblocks {
+    // Each user's Presence, for useMyPresence, useOthers, etc.
+    Presence: {
+      // Real-time cursor coordinates, null when the cursor leaves the canvas.
+      cursor: { x: number; y: number } | null;
+      // Whether the user is currently waiting on an AI response.
+      isThinking: boolean;
+    };
+
+    // The Storage tree for the room, for useMutation, useStorage, etc.
+    Storage: {
+      // The collaborative React Flow diagram, synced by useLiveblocksFlow
+      // under the default "flow" storage key. Optional because the hook
+      // creates it lazily from its `initial` option, so RoomProvider does
+      // not need to supply `initialStorage`.
+      flow?: LiveblocksFlow<CanvasNode, CanvasEdge>;
+    };
+
+    // Custom user info set when authenticating with a secret key
+    UserMeta: {
+      id: string;
+      info: {
+        // Display name shown next to the user's cursor and avatar.
+        name: string;
+        // Avatar image URL, omitted when the user has no avatar.
+        avatar?: string;
+        // Deterministic cursor color derived from the user id.
+        cursorColor: string;
+      };
+    };
+
+    // Custom events, for useBroadcastEvent, useEventListener
+    RoomEvent: {};
+      // Example has two events, using a union
+      // | { type: "PLAY" } 
+      // | { type: "REACTION"; emoji: "🔥" };
+
+    // Custom metadata set on threads, for useThreads, useCreateThread, etc.
+    ThreadMetadata: {
+      // Example, attaching coordinates to a thread
+      // x: number;
+      // y: number;
+    };
+
+    // Custom room info set with resolveRoomsInfo, for useRoomInfo
+    RoomInfo: {
+      // Example, rooms with a title and url
+      // title: string;
+      // url: string;
+    };
+  }
+}
+
+export {};

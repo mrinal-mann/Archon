@@ -4,6 +4,7 @@ import { useState } from "react"
 import { Share2, Sparkles } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
+import { CanvasRoom } from "@/components/editor/canvas/canvas-room"
 import { EditorNavbar } from "@/components/editor/editor-navbar"
 import { ProjectSidebar } from "@/components/editor/project-sidebar"
 import {
@@ -90,10 +91,8 @@ export function EditorWorkspace({
       />
 
       <div className="flex min-h-0 flex-1">
-        <main className="flex min-h-0 flex-1 items-center justify-center bg-background px-4 text-center">
-          <p className="text-sm text-muted-foreground">
-            Canvas coming soon. Your architecture diagram will appear here.
-          </p>
+        <main className="relative flex min-h-0 flex-1 bg-background">
+          <CanvasRoom roomId={project.id} />
         </main>
 
         {aiOpen && (
