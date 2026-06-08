@@ -1,20 +1,29 @@
 import type { Edge, Node } from "@xyflow/react"
 
 /**
- * Visual shape options for a canvas node. Kept open-ended for now; richer
- * shape-specific rendering arrives with custom node rendering later.
+ * Visual shape options for a canvas node. These are the shapes offered by the
+ * bottom shape panel; richer shape-specific rendering arrives later.
  */
-export type CanvasNodeShape = "rectangle" | "rounded" | "ellipse" | "diamond"
+export type CanvasNodeShape =
+  | "rectangle"
+  | "diamond"
+  | "circle"
+  | "pill"
+  | "cylinder"
+  | "hexagon"
 
 /**
  * Data carried by every canvas node. Shared across the collaborative canvas,
- * the future custom node renderer, and AI-driven node creation.
+ * the custom node renderer, and AI-driven node creation.
  */
 export type CanvasNodeData = {
   label: string
   color: string
   shape: CanvasNodeShape
 }
+
+/** Default fill color applied to newly created nodes. */
+export const DEFAULT_NODE_COLOR = "#27272a" as const
 
 /** Data carried by every canvas edge. Empty for now; reserved for future use. */
 export type CanvasEdgeData = Record<string, never>

@@ -9,8 +9,8 @@ change.
 
 ## Current Goal
 
-- Liveblocks-backed React Flow base canvas
-  (`context/features-specs/11-base-canvas.md`).
+- Bottom shape panel with drag-to-create canvas nodes
+  (`context/features-specs/12-shape-panel.md`).
 
 ## Completed
 
@@ -135,6 +135,9 @@ change.
 - 2026-06-07: Added `lib/liveblocks.ts` — `server-only` module exporting a cached `Liveblocks` node client (cached on `globalThis` outside production) and `getCursorColor(userId)`, a deterministic hash → fixed 9-color palette mapper.
 - 2026-06-07: Added `app/api/liveblocks-auth/route.ts` (`POST`) — requires Clerk auth (401), reads `room` from the body and treats it as the project id, verifies access via `getProjectAccess` (403 when unauthorized), ensures the room exists via `getRoom`/`createRoom` (create only if missing), then issues a `prepareSession` token with `FULL_ACCESS` carrying the Clerk name, avatar, and generated cursor color.
 - 2026-06-07: Completed `10-liveblock-setup.md`; `npm run build` passes with the `/api/liveblocks-auth` route registered.
+- 2026-06-07: Began `12-shape-panel.md`; all required context files were read before implementation.
+- 2026-06-07: `useLiveblocksFlow`'s `onNodesChange` is the standard React Flow `OnNodesChange`, so new nodes are added with an `{ type: "add", item }` change and sync through Liveblocks storage. `screenToFlowPosition` requires `ReactFlowProvider` context, so `Canvas` now wraps an inner component that owns the drop logic. Shape size is carried on `node.style` (width/height) so the renderer fills it.
+- 2026-06-07: Completed `12-shape-panel.md`; draggable bottom shape panel, drop-to-create nodes, and the basic custom node renderer are in place; `npm run build` passes.
 - Added shared canvas types in `types/canvas.ts`: `CanvasNodeShape`, `CanvasNodeData` ({ label, color, shape }), `CanvasEdgeData`, the `canvasNode`/`canvasEdge` type constants, and `CanvasNode`/`CanvasEdge` React Flow types.
 - Added `components/editor/canvas/canvas.tsx`: the React Flow canvas wired to Liveblocks via `useLiveblocksFlow<CanvasNode, CanvasEdge>({ suspense: true })` with empty initial nodes/edges; renders `ReactFlow` with loose connection mode, `fitView`, dot-pattern `Background`, and `MiniMap`. Imports `@xyflow/react` and `@liveblocks/react-flow` styles.
 - Added `components/editor/canvas/canvas-room.tsx`: client wrapper setting up `LiveblocksProvider` (authEndpoint `/api/liveblocks-auth`), `RoomProvider` (current room id, initial presence `{ cursor: null, isThinking: false }`), `ClientSideSuspense` with a loading state, and a class-based error boundary that renders a connection-error fallback.
@@ -143,4 +146,13 @@ change.
 - Typed the Liveblocks `Storage` tree in `liveblocks.config.ts`: added `flow?: LiveblocksFlow<CanvasNode, CanvasEdge>` (default `"flow"` storage key used by `useLiveblocksFlow`). Kept it optional so `RoomProvider` does not require `initialStorage` — the hook creates the flow lazily from its `initial` option.
 - Set `colorMode="dark"` on `ReactFlow` so the canvas controls/background match the dark-only theme.
 - Removed the `MiniMap` per user request (deviates from `11-base-canvas.md`, which listed it as required); canvas now renders only the dot-pattern background.
+- Verified `npm run build` passes.
+- Updated `CanvasNodeShape` in `types/canvas.ts` to the panel's six shapes (`rectangle`, `diamond`, `circle`, `pill`, `cylinder`, `hexagon`) and added `DEFAULT_NODE_COLOR` for newly created nodes.
+- Added `components/editor/canvas/shape-panel.tsx`: a floating pill toolbar pinned bottom-center with draggable icon buttons for each shape. `onDragStart` serializes a `{ shape, size }` payload onto the `application/x-canvas-shape` MIME type; default sizes follow the spec (rectangles/pills wider than tall, circles square, diamonds slightly larger).
+- Added `components/editor/canvas/canvas-node.tsx`: basic renderer for the `canvasNode` type — a bordered rectangle filling the dropped size with the label centered and top/bottom connection handles (shape-specific visuals deferred).
+- Updated `components/editor/canvas/canvas.tsx`: wrapped in `ReactFlowProvider`, registered `nodeTypes` for `canvasNode`, added `dragover`/`drop` handling on the canvas wrapper, and on drop converts screen→flow coords via `screenToFlowPosition`, generates the node id as `shape-timestamp-counter`, and creates a node (empty label, default color, dragged shape, dropped size) via an `add` node change. Renders `<ShapePanel />` over the flow.
+- Verified `npm run build` passes with no type errors.
+- Canvas visual fixes (post-12 review): replaced the square-only renderer in `components/editor/canvas/canvas-node.tsx` with shape-specific SVG silhouettes (rectangle, diamond, circle, pill, cylinder, hexagon) drawn in a normalized `0 0 100 100` viewBox with `preserveAspectRatio="none"` + `non-scaling-stroke`, filled with `fill-card` and outlined with `stroke-border` (`stroke-primary` when selected); label centered on an overlay. This intentionally brings forward the shape-specific visuals that `12-shape-panel.md` had deferred, per user request.
+- Made the React Flow surface transparent (`style={{ backgroundColor: "transparent" }}`) so the canvas inherits the app `--background` instead of React Flow's darker dark-mode default (`#141414`), removing the "boxed/floating panel" seam. Tuned the dot `Background` to `gap={20} size={1}`.
+- Centered dropped nodes under the cursor by offsetting the `screenToFlowPosition` result by half the shape size (the conversion already accounts for pan + zoom).
 - Verified `npm run build` passes.
