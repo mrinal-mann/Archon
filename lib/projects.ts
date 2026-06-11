@@ -1,6 +1,6 @@
 import { auth, currentUser } from "@clerk/nextjs/server";
 
-import { prisma } from "@/lib/prisma";
+import { prisma, withDbRetry } from "@/lib/prisma";
 
 export type ProjectRole = "owner" | "collaborator";
 
@@ -38,18 +38,20 @@ export async function getUserProjects(): Promise<UserProjects> {
 
   const email = await primaryEmail();
 
-  const [owned, shared] = await Promise.all([
-    prisma.project.findMany({
-      where: { ownerId: userId },
-      orderBy: { createdAt: "desc" },
-    }),
-    email
-      ? prisma.project.findMany({
-          where: { collaborators: { some: { email } } },
-          orderBy: { createdAt: "desc" },
-        })
-      : Promise.resolve([]),
-  ]);
+  const [owned, shared] = await withDbRetry(() =>
+    Promise.all([
+      prisma.project.findMany({
+        where: { ownerId: userId },
+        orderBy: { createdAt: "desc" },
+      }),
+      email
+        ? prisma.project.findMany({
+            where: { collaborators: { some: { email } } },
+            orderBy: { createdAt: "desc" },
+          })
+        : Promise.resolve([]),
+    ]),
+  );
 
   return {
     owned: owned.map((project) => ({

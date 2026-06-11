@@ -18,15 +18,51 @@ export type CanvasNodeShape =
  */
 export type CanvasNodeData = {
   label: string
+  /** Node background (fill) color. */
   color: string
+  /** Paired label/text color for the chosen background. */
+  textColor?: string
   shape: CanvasNodeShape
 }
 
-/** Default fill color applied to newly created nodes. */
-export const DEFAULT_NODE_COLOR = "#27272a" as const
+/**
+ * A predefined node color theme: a background fill paired with a matching text
+ * color. Selecting a swatch applies both at once. These live here (rather than
+ * in `globals.css`) because they are canvas-node specific, not part of the
+ * shared semantic theme tokens.
+ */
+export type NodeColorOption = {
+  id: string
+  label: string
+  background: string
+  text: string
+}
 
-/** Data carried by every canvas edge. Empty for now; reserved for future use. */
-export type CanvasEdgeData = Record<string, never>
+/**
+ * The predefined background/text color pairs offered by the node color toolbar.
+ * Backgrounds are deep, dark-canvas-friendly tints; each text color is tuned to
+ * read clearly on its paired background.
+ */
+export const NODE_COLOR_PALETTE: readonly NodeColorOption[] = [
+  { id: "slate", label: "Slate", background: "#27272a", text: "#e4e4e7" },
+  { id: "blue", label: "Blue", background: "#1e3a8a", text: "#bfdbfe" },
+  { id: "green", label: "Green", background: "#14532d", text: "#bbf7d0" },
+  { id: "amber", label: "Amber", background: "#78350f", text: "#fde68a" },
+  { id: "rose", label: "Rose", background: "#881337", text: "#fecdd3" },
+  { id: "violet", label: "Violet", background: "#4c1d95", text: "#ddd6fe" },
+] as const
+
+/** Default fill color applied to newly created nodes (matches the first pair). */
+export const DEFAULT_NODE_COLOR = NODE_COLOR_PALETTE[0].background
+
+/** Default label color applied to newly created nodes (matches the first pair). */
+export const DEFAULT_NODE_TEXT_COLOR = NODE_COLOR_PALETTE[0].text
+
+/** Data carried by every canvas edge. */
+export type CanvasEdgeData = {
+  /** Optional inline label rendered at the edge midpoint. */
+  label?: string
+}
 
 /** Custom node type registered with React Flow. */
 export const CANVAS_NODE_TYPE = "canvasNode" as const

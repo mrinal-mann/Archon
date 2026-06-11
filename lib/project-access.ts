@@ -1,6 +1,6 @@
 import { auth, currentUser } from "@clerk/nextjs/server";
 
-import { prisma } from "@/lib/prisma";
+import { prisma, withDbRetry } from "@/lib/prisma";
 import type { ProjectRole } from "@/lib/projects";
 
 export type CurrentIdentity = {
@@ -40,9 +40,11 @@ export async function getProjectAccess(
   projectId: string,
   identity: CurrentIdentity
 ): Promise<ProjectAccess | null> {
-  const project = await prisma.project.findUnique({
-    where: { id: projectId },
-  });
+  const project = await withDbRetry(() =>
+    prisma.project.findUnique({
+      where: { id: projectId },
+    })
+  );
   if (!project) return null;
 
   if (project.ownerId === identity.userId) {
@@ -50,11 +52,14 @@ export async function getProjectAccess(
   }
 
   if (identity.email) {
-    const collaborator = await prisma.projectCollaborator.findUnique({
-      where: {
-        projectId_email: { projectId, email: identity.email },
-      },
-    });
+    const email = identity.email;
+    const collaborator = await withDbRetry(() =>
+      prisma.projectCollaborator.findUnique({
+        where: {
+          projectId_email: { projectId, email },
+        },
+      })
+    );
     if (collaborator) {
       return {
         project: { id: project.id, name: project.name },
