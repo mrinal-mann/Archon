@@ -1,8 +1,10 @@
 // Define Liveblocks types for your application
 // https://liveblocks.io/docs/api-reference/liveblocks-react#Typing-your-data
+import type { LiveList } from "@liveblocks/client";
 import type { LiveblocksFlow } from "@liveblocks/react-flow";
 
-import type { CanvasEdge, CanvasNode } from "@/types/canvas";
+import type { AiPresence, CanvasEdge, CanvasNode } from "@/types/canvas";
+import type { AiChatMessage, AiStatusFeedMessage } from "@/types/tasks";
 
 declare global {
   interface Liveblocks {
@@ -11,7 +13,7 @@ declare global {
       // Real-time cursor coordinates, null when the cursor leaves the canvas.
       cursor: { x: number; y: number } | null;
       // Whether the user is currently waiting on an AI response.
-      isThinking: boolean;
+      thinking: boolean;
     };
 
     // The Storage tree for the room, for useMutation, useStorage, etc.
@@ -21,6 +23,18 @@ declare global {
       // creates it lazily from its `initial` option, so RoomProvider does
       // not need to supply `initialStorage`.
       flow?: LiveblocksFlow<CanvasNode, CanvasEdge>;
+      // AI design-agent presence + status feed, published by the background
+      // task so all participants see the same live progress. Optional because
+      // it only exists once a design run has touched the room.
+      ai?: AiPresence;
+      // Shared AI status feed: the single most recent status message, visible
+      // to everyone in the room. Generic across design + spec generation.
+      // Optional because it only exists once an AI flow has published to it.
+      "ai-status-feed"?: AiStatusFeedMessage;
+      // Realtime room chat feed: an ordered list of human-authored messages,
+      // separate from the AI status feed. Optional because it is created lazily
+      // on the first message sent in the room.
+      "ai-chat"?: LiveList<AiChatMessage>;
     };
 
     // Custom user info set when authenticating with a secret key

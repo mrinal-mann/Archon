@@ -1,0 +1,15 @@
+model ProjectSpec {
+  id        String   @id @default(cuid())
+  projectId String
+  // Vercel Blob URL pointer to the generated Markdown spec. The spec content
+  // itself lives in Blob storage — never in the database. Stored privately and
+  // only ever served through the download API route, never exposed directly.
+  filePath  String
+  createdAt DateTime @default(now())
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  // Listing specs for a project filters on projectId and sorts by createdAt
+  // descending, so the project relation is indexed.
+  @@index([projectId])
+}

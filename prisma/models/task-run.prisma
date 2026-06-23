@@ -1,0 +1,17 @@
+model TaskRun {
+  id        String   @id @default(cuid())
+  runId     String   @unique
+  projectId String
+  userId    String
+  // Which AI flow produced this run, e.g. "design" or "spec". Defaults to
+  // "design" so the existing design-agent records stay valid.
+  type      String   @default("design")
+  // Lifecycle status of the run, updated as the task progresses:
+  // queued -> running -> completed | failed.
+  status    String   @default("queued")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([runId])
+  @@index([userId, projectId])
+}

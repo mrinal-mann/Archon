@@ -1,34 +1,34 @@
 "use client"
 
 import { Component, type ReactNode } from "react"
-import {
-  ClientSideSuspense,
-  LiveblocksProvider,
-  RoomProvider,
-} from "@liveblocks/react/suspense"
+import { ClientSideSuspense } from "@liveblocks/react/suspense"
 
 import { Canvas } from "@/components/editor/canvas/canvas"
+import type { SaveStatus } from "@/hooks/use-canvas-autosave"
 
 type CanvasRoomProps = {
-  roomId: string
+  onSaveStatusChange?: (status: SaveStatus) => void
+  onRegisterSave?: (save: () => void) => void
 }
 
 /**
- * Sets up the Liveblocks room for the collaborative canvas: authenticates
- * through the project auth endpoint, joins the project's room, and renders the
- * synced React Flow canvas behind a loading and error fallback.
+ * Renders the synced React Flow canvas behind a loading and error fallback. The
+ * Liveblocks provider + room are set up one level up in `EditorWorkspace` so the
+ * AI sidebar shares the same room connection.
  */
-export function CanvasRoom({ roomId }: CanvasRoomProps) {
+export function CanvasRoom({
+  onSaveStatusChange,
+  onRegisterSave,
+}: CanvasRoomProps) {
   return (
-    <LiveblocksProvider authEndpoint="/api/liveblocks-auth">
-      <RoomProvider id={roomId} initialPresence={{ cursor: null, isThinking: false }}>
-        <CanvasErrorBoundary>
-          <ClientSideSuspense fallback={<CanvasLoading />}>
-            <Canvas />
-          </ClientSideSuspense>
-        </CanvasErrorBoundary>
-      </RoomProvider>
-    </LiveblocksProvider>
+    <CanvasErrorBoundary>
+      <ClientSideSuspense fallback={<CanvasLoading />}>
+        <Canvas
+          onSaveStatusChange={onSaveStatusChange}
+          onRegisterSave={onRegisterSave}
+        />
+      </ClientSideSuspense>
+    </CanvasErrorBoundary>
   )
 }
 

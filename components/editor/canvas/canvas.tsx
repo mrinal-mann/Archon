@@ -1,6 +1,13 @@
 "use client"
 
-import { useCallback, useRef, useState, type DragEvent } from "react"
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type DragEvent,
+  type MouseEvent,
+} from "react"
 import { LayoutTemplate } from "lucide-react"
 import {
   Background,
@@ -21,16 +28,25 @@ import {
   useCanRedo,
   useCanUndo,
   useRedo,
+  useRoom,
   useUndo,
+  useUpdateMyPresence,
 } from "@liveblocks/react/suspense"
 
 import { CanvasNodeRenderer } from "@/components/editor/canvas/canvas-node"
 import { CanvasEdgeRenderer } from "@/components/editor/canvas/canvas-edge"
 import { CanvasControls } from "@/components/editor/canvas/canvas-controls"
 import { CanvasActionsProvider } from "@/components/editor/canvas/canvas-context"
+import { PresenceAvatars } from "@/components/editor/canvas/presence-avatars"
+import { LiveCursors } from "@/components/editor/canvas/live-cursors"
+import { AiPresence } from "@/components/editor/canvas/ai-presence"
 import { StarterTemplatesModal } from "@/components/editor/starter-templates-modal"
 import type { CanvasTemplate } from "@/components/editor/starter-templates"
 import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts"
+import {
+  useCanvasAutosave,
+  type SaveStatus,
+} from "@/hooks/use-canvas-autosave"
 import {
   ShapePanel,
   SHAPE_DRAG_MIME,
@@ -73,12 +89,20 @@ const defaultEdgeOptions: DefaultEdgeOptions = {
   },
 }
 
+type CanvasInnerProps = {
+  onSaveStatusChange?: (status: SaveStatus) => void
+  onRegisterSave?: (save: () => void) => void
+}
+
 /**
  * The collaborative React Flow canvas. Nodes and edges are synced through
  * Liveblocks storage; shapes dragged from the bottom panel are dropped onto the
  * canvas to create new nodes.
  */
-function CanvasInner() {
+function CanvasInner({
+  onSaveStatusChange,
+  onRegisterSave,
+}: CanvasInnerProps) {
   const { nodes, edges, onNodesChange, onEdgesChange, onConnect, onDelete } =
     useLiveblocksFlow<CanvasNode, CanvasEdge>({
       suspense: true,
@@ -88,9 +112,88 @@ function CanvasInner() {
 
   const reactFlow = useReactFlow<CanvasNode, CanvasEdge>()
   const { screenToFlowPosition, getNode, getEdge } = reactFlow
+  const updateMyPresence = useUpdateMyPresence()
   const nodeCounter = useRef(0)
 
+  // The Liveblocks room id is the project id, so it doubles as the save target.
+  const projectId = useRoom().id
+
   const [templatesOpen, setTemplatesOpen] = useState(false)
+
+  // Autosave is gated until the initial saved-canvas load has resolved.
+  const [loaded, setLoaded] = useState(false)
+  const loadAttempted = useRef(false)
+
+  // On first mount, load the saved canvas only when the live room is empty.
+  // A room with existing nodes/edges means active collaboration, so loading is
+  // skipped entirely to avoid overwriting it.
+  useEffect(() => {
+    if (loadAttempted.current) {
+      return
+    }
+    loadAttempted.current = true
+
+    let cancelled = false
+    void (async () => {
+      // A room with existing content means active collaboration, so skip the
+      // load entirely to avoid overwriting it — just enable autosave.
+      if (nodes.length > 0 || edges.length > 0) {
+        if (!cancelled) {
+          setLoaded(true)
+        }
+        return
+      }
+
+      try {
+        const res = await fetch(`/api/projects/${projectId}/canvas`)
+        if (res.ok) {
+          const data = (await res.json()) as {
+            nodes?: CanvasNode[]
+            edges?: CanvasEdge[]
+          }
+          if (!cancelled) {
+            if (data.nodes?.length) {
+              onNodesChange(
+                data.nodes.map((node) => ({ type: "add", item: node })),
+              )
+            }
+            if (data.edges?.length) {
+              onEdgesChange(
+                data.edges.map((edge) => ({ type: "add", item: edge })),
+              )
+            }
+          }
+        }
+      } catch {
+        // A failed load leaves the canvas empty; autosave still enables below.
+      } finally {
+        if (!cancelled) {
+          setLoaded(true)
+        }
+      }
+    })()
+
+    return () => {
+      cancelled = true
+    }
+    // Runs once at mount; the ref guards against re-entry.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  // Persist canvas changes (debounced) once the initial load has resolved.
+  const { save } = useCanvasAutosave({
+    projectId,
+    nodes,
+    edges,
+    enabled: loaded,
+    onStatusChange: onSaveStatusChange,
+  })
+
+  // Expose the shared save fn so the navbar Save button can trigger it. `save`
+  // is stable, so this registers once.
+  useEffect(() => {
+    onRegisterSave?.(() => void save())
+  }, [save, onRegisterSave])
 
   // Undo/redo run against the Liveblocks room history, which the
   // useLiveblocksFlow changes already route through.
@@ -209,6 +312,23 @@ function CanvasInner() {
     [onNodesChange, onEdgesChange, reactFlow],
   )
 
+  // Broadcast the local cursor in flow coordinates so collaborators see it at
+  // the same logical canvas location regardless of their own pan/zoom.
+  const handleMouseMove = useCallback(
+    (event: MouseEvent<HTMLDivElement>) => {
+      const point = screenToFlowPosition({
+        x: event.clientX,
+        y: event.clientY,
+      })
+      updateMyPresence({ cursor: { x: point.x, y: point.y } })
+    },
+    [screenToFlowPosition, updateMyPresence],
+  )
+
+  const handleMouseLeave = useCallback(() => {
+    updateMyPresence({ cursor: null })
+  }, [updateMyPresence])
+
   const handleDragOver = useCallback((event: DragEvent<HTMLDivElement>) => {
     if (!event.dataTransfer.types.includes(SHAPE_DRAG_MIME)) {
       return
@@ -280,6 +400,8 @@ function CanvasInner() {
           onEdgesChange={onEdgesChange}
           onConnect={onConnect}
           onDelete={onDelete}
+          onMouseMove={handleMouseMove}
+          onMouseLeave={handleMouseLeave}
           connectionMode={ConnectionMode.Loose}
           colorMode="dark"
           fitView
@@ -289,6 +411,9 @@ function CanvasInner() {
         >
           <Background variant={BackgroundVariant.Dots} gap={20} size={1} />
         </ReactFlow>
+        <LiveCursors />
+        <AiPresence />
+        <PresenceAvatars />
         <div className="pointer-events-none absolute top-6 left-6 z-10 flex">
           <button
             type="button"
@@ -319,10 +444,18 @@ function CanvasInner() {
   )
 }
 
-export function Canvas() {
+type CanvasProps = {
+  onSaveStatusChange?: (status: SaveStatus) => void
+  onRegisterSave?: (save: () => void) => void
+}
+
+export function Canvas({ onSaveStatusChange, onRegisterSave }: CanvasProps) {
   return (
     <ReactFlowProvider>
-      <CanvasInner />
+      <CanvasInner
+        onSaveStatusChange={onSaveStatusChange}
+        onRegisterSave={onRegisterSave}
+      />
     </ReactFlowProvider>
   )
 }

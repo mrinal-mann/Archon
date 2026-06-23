@@ -1,11 +1,15 @@
 "use client"
 
-import { useState } from "react"
+import { useCallback, useRef, useState } from "react"
 import { Share2, Sparkles } from "lucide-react"
+import { LiveblocksProvider, RoomProvider } from "@liveblocks/react/suspense"
 
 import { Button } from "@/components/ui/button"
+import { AiSidebar } from "@/components/editor/ai-sidebar"
 import { CanvasRoom } from "@/components/editor/canvas/canvas-room"
 import { EditorNavbar } from "@/components/editor/editor-navbar"
+import { SaveButton } from "@/components/editor/save-status"
+import type { SaveStatus } from "@/hooks/use-canvas-autosave"
 import { ProjectSidebar } from "@/components/editor/project-sidebar"
 import {
   CreateProjectDialog,
@@ -32,6 +36,15 @@ export function EditorWorkspace({
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [aiOpen, setAiOpen] = useState(true)
   const [shareOpen, setShareOpen] = useState(false)
+  const [saveStatus, setSaveStatus] = useState<SaveStatus>("idle")
+
+  // The canvas (inside the Liveblocks room) registers its save fn here so the
+  // navbar Save button can trigger the same write the autosave hook uses.
+  const saveRef = useRef<(() => void) | null>(null)
+  const registerSave = useCallback((save: () => void) => {
+    saveRef.current = save
+  }, [])
+  const handleSave = useCallback(() => saveRef.current?.(), [])
   const {
     dialog,
     name,
@@ -57,6 +70,7 @@ export function EditorWorkspace({
         centerContent={<span className="truncate">{project.name}</span>}
         actions={
           <>
+            <SaveButton status={saveStatus} onSave={handleSave} />
             <Button
               type="button"
               variant="ghost"
@@ -90,22 +104,26 @@ export function EditorWorkspace({
         onDeleteProject={openDelete}
       />
 
-      <div className="flex min-h-0 flex-1">
-        <main className="relative flex min-h-0 flex-1 bg-background">
-          <CanvasRoom roomId={project.id} />
-        </main>
+      {/* A single Liveblocks room wraps both the canvas and the AI sidebar so
+          the sidebar can read shared AI presence/status from the same room
+          instead of opening a parallel realtime connection. */}
+      <LiveblocksProvider authEndpoint="/api/liveblocks-auth">
+        <RoomProvider
+          id={project.id}
+          initialPresence={{ cursor: null, thinking: false }}
+        >
+          <div className="flex min-h-0 flex-1">
+            <main className="relative flex min-h-0 flex-1 bg-background">
+              <CanvasRoom
+                onSaveStatusChange={setSaveStatus}
+                onRegisterSave={registerSave}
+              />
+            </main>
 
-        {aiOpen && (
-          <aside className="flex w-72 shrink-0 flex-col border-l border-border bg-card text-card-foreground lg:w-80">
-            <div className="flex h-12 shrink-0 items-center border-b border-border px-4 text-sm font-medium text-foreground">
-              AI Assistant
-            </div>
-            <div className="flex min-h-0 flex-1 items-center justify-center px-4 text-center text-sm text-muted-foreground">
-              AI chat coming soon.
-            </div>
-          </aside>
-        )}
-      </div>
+            <AiSidebar isOpen={aiOpen} onClose={() => setAiOpen(false)} />
+          </div>
+        </RoomProvider>
+      </LiveblocksProvider>
 
       <CreateProjectDialog
         open={dialog?.type === "create"}

@@ -75,3 +75,35 @@ export type CanvasNode = Node<CanvasNodeData, typeof CANVAS_NODE_TYPE>
 
 /** A React Flow edge backed by Liveblocks storage. */
 export type CanvasEdge = Edge<CanvasEdgeData, typeof CANVAS_EDGE_TYPE>
+
+/** Lifecycle phase of the AI design agent, surfaced to every participant. */
+export type AiAgentStatus =
+  | "idle"
+  | "thinking"
+  | "generating"
+  | "applying"
+  | "complete"
+  | "error"
+
+/**
+ * Shared AI agent presence + status, published into Liveblocks storage by the
+ * design-agent background task so every participant sees the same live progress.
+ * Stored as a plain (immutable) value rather than a Live structure because the
+ * task rewrites it wholesale at each step.
+ *
+ * `thinking` and `cursor` are the AI's *presence* (mirroring the human presence
+ * fields); `status` and `message` are the shared *status feed*. When a run
+ * finishes the presence is cleared (`thinking: false`, `cursor: null`) while the
+ * final status message stays visible briefly.
+ */
+export type AiPresence = {
+  status: AiAgentStatus
+  /** Human-readable status feed message for the current step. */
+  message: string
+  /** Whether the AI is actively working (drives the thinking indicator). */
+  thinking: boolean
+  /** AI cursor position in flow coordinates, null when not present. */
+  cursor: { x: number; y: number } | null
+  /** Epoch ms of the last update, so stale states can be ignored/expired. */
+  updatedAt: number
+}
