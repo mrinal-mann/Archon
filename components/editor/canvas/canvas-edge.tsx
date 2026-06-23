@@ -10,7 +10,7 @@ import {
 import {
   BaseEdge,
   EdgeLabelRenderer,
-  getSmoothStepPath,
+  getSimpleBezierPath,
   type EdgeProps,
 } from "@xyflow/react"
 
@@ -45,14 +45,13 @@ export function CanvasEdgeRenderer({
   const [isEditing, setIsEditing] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
 
-  const [edgePath, labelX, labelY] = getSmoothStepPath({
+  const [edgePath, labelX, labelY] = getSimpleBezierPath({
     sourceX,
     sourceY,
     sourcePosition,
     targetX,
     targetY,
     targetPosition,
-    borderRadius: 8,
   })
 
   // Focus and select the text when entering edit mode.

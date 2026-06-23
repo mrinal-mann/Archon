@@ -353,7 +353,7 @@ export function SpecsPanel() {
                     </div>
                     <div className="min-w-0 flex-1">
                       <h3 className="truncate text-sm font-medium text-foreground">
-                        {spec.filename}
+                        Generated Spec
                       </h3>
                       <p className="mt-0.5 text-xs text-muted-foreground">
                         {formatCreatedAt(spec.createdAt)}
@@ -388,18 +388,16 @@ export function SpecsPanel() {
           if (!open) setSelected(null)
         }}
       >
-        <DialogContent className="flex max-h-[85vh] flex-col gap-0 sm:max-w-2xl">
+        <DialogContent className="sm:max-w-2xl">
           <DialogHeader>
-            <DialogTitle className="truncate pr-6">
-              {selected?.filename ?? "Spec"}
-            </DialogTitle>
+            <DialogTitle>Generated Spec</DialogTitle>
             <DialogDescription>
               {selected ? formatCreatedAt(selected.createdAt) : null}
             </DialogDescription>
           </DialogHeader>
 
-          <ScrollArea className="-mx-2 min-h-0 flex-1 px-2">
-            <div className="py-2">
+          <ScrollArea className="max-h-[60vh]">
+            <div className="pr-1">
               {contentLoading ? (
                 <div className="flex flex-col items-center gap-3 py-12 text-center text-muted-foreground">
                   <Loader2 className="size-6 animate-spin" />

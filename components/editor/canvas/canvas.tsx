@@ -215,7 +215,11 @@ function CanvasInner({
     [reactFlow],
   )
 
-  useKeyboardShortcuts({ reactFlow, onUndo: undo, onRedo: redo })
+  const handleSelectAll = useCallback(() => {
+    reactFlow.setNodes(nodes.map((n) => ({ ...n, selected: true })))
+  }, [reactFlow, nodes])
+
+  useKeyboardShortcuts({ reactFlow, onUndo: undo, onRedo: redo, onSelectAll: handleSelectAll })
 
   const updateNodeLabel = useCallback(
     (id: string, label: string) => {

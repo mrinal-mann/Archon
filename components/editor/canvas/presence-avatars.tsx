@@ -1,6 +1,5 @@
 "use client"
 
-import { UserButton } from "@clerk/nextjs"
 import { useUser } from "@clerk/nextjs"
 import { useOthers } from "@liveblocks/react/suspense"
 
@@ -64,35 +63,27 @@ export function PresenceAvatars() {
   const visible = collaborators.slice(0, MAX_VISIBLE)
   const overflow = collaborators.length - visible.length
 
+  if (collaborators.length === 0) {
+    return null
+  }
+
   return (
     <div className="pointer-events-none absolute top-6 right-6 z-10 flex">
       <div className="pointer-events-auto flex items-center gap-2 rounded-full border border-border bg-card px-2 py-1.5 shadow-lg">
-        {collaborators.length > 0 ? (
-          <>
-            <div className="flex -space-x-2">
-              {visible.map((other) => (
-                <CollaboratorAvatar
-                  key={other.connectionId}
-                  name={other.info.name}
-                  avatar={other.info.avatar}
-                />
-              ))}
-              {overflow > 0 ? (
-                <div className="flex size-7 items-center justify-center rounded-full bg-muted text-xs font-medium text-muted-foreground ring-2 ring-border">
-                  +{overflow}
-                </div>
-              ) : null}
+        <div className="flex -space-x-2">
+          {visible.map((other) => (
+            <CollaboratorAvatar
+              key={other.connectionId}
+              name={other.info.name}
+              avatar={other.info.avatar}
+            />
+          ))}
+          {overflow > 0 ? (
+            <div className="flex size-7 items-center justify-center rounded-full bg-muted text-xs font-medium text-muted-foreground ring-2 ring-border">
+              +{overflow}
             </div>
-            <div className="h-6 w-px bg-border" aria-hidden />
-          </>
-        ) : null}
-        <UserButton
-          appearance={{
-            elements: {
-              userButtonAvatarBox: { width: "1.75rem", height: "1.75rem" },
-            },
-          }}
-        />
+          ) : null}
+        </div>
       </div>
     </div>
   )

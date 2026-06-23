@@ -13,6 +13,8 @@ type UseKeyboardShortcutsOptions = {
   onUndo: () => void
   /** Redo handler, wired to Liveblocks history. */
   onRedo: () => void
+  /** Select-all handler (Ctrl/Cmd+A). */
+  onSelectAll: () => void
 }
 
 /**
@@ -44,6 +46,7 @@ export function useKeyboardShortcuts({
   reactFlow,
   onUndo,
   onRedo,
+  onSelectAll,
 }: UseKeyboardShortcutsOptions) {
   useEffect(() => {
     function handleKeyDown(event: KeyboardEvent) {
@@ -65,6 +68,9 @@ export function useKeyboardShortcuts({
         } else if (key === "y") {
           event.preventDefault()
           onRedo()
+        } else if (key === "a") {
+          event.preventDefault()
+          onSelectAll()
         }
         return
       }
@@ -80,5 +86,5 @@ export function useKeyboardShortcuts({
 
     window.addEventListener("keydown", handleKeyDown)
     return () => window.removeEventListener("keydown", handleKeyDown)
-  }, [reactFlow, onUndo, onRedo])
+  }, [reactFlow, onUndo, onRedo, onSelectAll])
 }

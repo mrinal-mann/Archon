@@ -106,6 +106,8 @@ Use integer x/y, never overlap nodes, and center each layer so the diagram looks
 
 LABELS: short, 1-4 words. IDS: invent short unique ids for NEW nodes (e.g. "gateway", "url-service", "cache", "db"). For edits/edges reference EXISTING ids from the provided canvas.
 
+EDGE LABELS: Every add_edge action MUST include a label that describes what flows between the two nodes — the request type, data operation, or relationship (e.g. "HTTP Request", "Browse Products", "Cache Miss", "Place Order", "Write/Update", "Publish Event", "Query", "Read Cache"). Keep edge labels to 1-4 words. Never leave an edge unlabeled.
+
 When the canvas is empty, design the full system from scratch. When it already has content, make the SMALLEST set of changes that satisfies the request and keep existing ids.
 
 Always return at least one action. Every edge must connect ids that exist after your add_node actions, and connect the layers so the end-to-end flow is obvious.`;
