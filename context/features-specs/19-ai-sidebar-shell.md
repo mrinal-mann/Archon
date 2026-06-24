@@ -3,15 +3,13 @@ Complete the existing AI sidebar placeholder and turn it into a proper floating 
 ## Implementation
 
 1. Separate the AI sidebar into its own component.
-
    - keep the open/close state controlled by the parent
    - preserve the existing slide animation, floating position, border, background, and shadow styling
    - use sidebar surface styles like `bg-base/95`, `border-surface-border`, and the current shadow treatment
 
 2. Add the sidebar header.
-
    - title: `AI Workspace`
-   - subtitle: `Collaborate with Ghost AI`
+   - subtitle: `Collaborate with Archon `
    - small bot icon
    - close button aligned to the right
    - use `text-primary-text` for the title
@@ -20,7 +18,6 @@ Complete the existing AI sidebar placeholder and turn it into a proper floating 
 3. Add a tabbed layout with two tabs.
 
    Use shadcn `Tabs`.
-
    - `AI Architect`
    - `Specs`
    - active tab should use the accent styling, like `bg-accent` and `text-accent`
@@ -29,7 +26,6 @@ Complete the existing AI sidebar placeholder and turn it into a proper floating 
 4. Build the AI Architect tab.
 
    Use shadcn components where they fit, especially `Button` and `Textarea`.
-
    - scrollable chat area
    - empty state with bot icon, short description, and starter prompt chips
    - starter chips:
@@ -44,7 +40,6 @@ Complete the existing AI sidebar placeholder and turn it into a proper floating 
    - `Enter` submits, `Shift+Enter` adds a newline
 
 5. Build the Specs tab.
-
    - show a `Generate Spec` button using `bg-accent text-white`
    - show a demo spec card for now
    - style the card with `bg-elevated` and `border-surface-border`

@@ -16,7 +16,7 @@ import {
  */
 type RunStatus = "queued" | "running" | "completed" | "failed";
 
-const SYSTEM_PROMPT = `You are Ghost AI, a senior systems architect. You write clear, structured technical specifications for software systems.
+const SYSTEM_PROMPT = `You are Archon , a senior systems architect. You write clear, structured technical specifications for software systems.
 
 You are given:
 - the user's chat history with the assistant (their intent and requirements)
@@ -74,7 +74,9 @@ function summarizeChat(payload: GenerateSpecPayload) {
     return "(no chat history)";
   }
   return payload.chatHistory
-    .map((m) => `${m.role === "assistant" ? "Assistant" : "User"}: ${m.content}`)
+    .map(
+      (m) => `${m.role === "assistant" ? "Assistant" : "User"}: ${m.content}`,
+    )
     .join("\n");
 }
 
@@ -86,7 +88,7 @@ function summarizeChat(payload: GenerateSpecPayload) {
 async function setRunStatus(runId: string, status: RunStatus) {
   try {
     await withDbRetry(() =>
-      prisma.taskRun.updateMany({ where: { runId }, data: { status } })
+      prisma.taskRun.updateMany({ where: { runId }, data: { status } }),
     );
   } catch (error) {
     // Status persistence is best-effort: never let it fail the run.
@@ -107,7 +109,7 @@ async function publishStatus(
   roomId: string,
   text: string,
   active: boolean,
-  specId?: string
+  specId?: string,
 ) {
   try {
     await liveblocks.mutateStorage(roomId, ({ root }) => {
@@ -135,10 +137,10 @@ async function publishStatus(
 async function persistSpec(
   projectId: string,
   spec: string,
-  runId: string
+  runId: string,
 ): Promise<string> {
   const record = await withDbRetry(() =>
-    prisma.projectSpec.create({ data: { projectId, filePath: "" } })
+    prisma.projectSpec.create({ data: { projectId, filePath: "" } }),
   );
 
   const blob = await put(`project-${projectId}/spec-${record.id}.md`, spec, {
@@ -152,7 +154,7 @@ async function persistSpec(
     prisma.projectSpec.update({
       where: { id: record.id },
       data: { filePath: blob.url },
-    })
+    }),
   );
 
   logger.info("generate-spec persisted spec", {
@@ -201,14 +203,14 @@ export const generateSpec = task({
     });
 
     // Announce the run has picked up before any heavy work begins.
-    await publishStatus(roomId, "Ghost AI queued your spec…", true);
+    await publishStatus(roomId, "Archon  queued your spec…", true);
 
     metadata.set("status", "running").set("statusText", "Analyzing canvas");
     await setRunStatus(runId, "running");
 
     try {
       // Step 1 — analyzing the canvas + chat context.
-      await publishStatus(roomId, "Ghost AI is analyzing your canvas…", true);
+      await publishStatus(roomId, "Archon  is analyzing your canvas…", true);
 
       const google = createGoogleGenerativeAI({
         apiKey: process.env.GEMINI_API_KEY,
@@ -216,13 +218,13 @@ export const generateSpec = task({
 
       // Step 2 — generating the spec.
       metadata.set("statusText", "Generating spec");
-      await publishStatus(roomId, "Ghost AI is generating your spec…", true);
+      await publishStatus(roomId, "Archon  is generating your spec…", true);
 
       const { text } = await generateText({
         model: google("gemini-3.1-flash-lite"),
         system: SYSTEM_PROMPT,
         prompt: `Chat history:\n${summarizeChat(payload)}\n\nCanvas (JSON):\n${summarizeCanvas(
-          payload
+          payload,
         )}\n\nWrite the technical specification now.`,
       });
 
@@ -238,12 +240,12 @@ export const generateSpec = task({
       const specId = await persistSpec(projectId, spec, runId);
 
       // Step 4 — completed.
-      metadata.set("status", "completed").set("statusText", "Spec ready").set(
-        "specId",
-        specId
-      );
+      metadata
+        .set("status", "completed")
+        .set("statusText", "Spec ready")
+        .set("specId", specId);
       await setRunStatus(runId, "completed");
-      await publishStatus(roomId, "Ghost AI finished your spec.", false, specId);
+      await publishStatus(roomId, "Archon  finished your spec.", false, specId);
 
       logger.info("generate-spec completed", {
         projectId,
@@ -263,12 +265,14 @@ export const generateSpec = task({
         error: message,
       });
 
-      metadata.set("status", "failed").set("statusText", "Spec generation failed");
+      metadata
+        .set("status", "failed")
+        .set("statusText", "Spec generation failed");
       await setRunStatus(runId, "failed");
       await publishStatus(
         roomId,
-        "Ghost AI ran into a problem and couldn't finish the spec.",
-        false
+        "Archon  ran into a problem and couldn't finish the spec.",
+        false,
       );
 
       return { ok: false as const, error: message };

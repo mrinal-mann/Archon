@@ -52,7 +52,8 @@ const CURSOR_TRAVEL_MS = 320;
 const STEP_SETTLE_MS = 160;
 
 /** Small async delay used to pace the animated canvas build. */
-const sleep = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
+const sleep = (ms: number) =>
+  new Promise<void>((resolve) => setTimeout(resolve, ms));
 
 /** Arrowhead applied to AI-created edges so they match UI-drawn connections. */
 const ARROW_MARKER = {
@@ -62,7 +63,7 @@ const ARROW_MARKER = {
   color: "var(--muted-foreground)",
 } as unknown as CanvasEdge["markerEnd"];
 
-const SYSTEM_PROMPT = `You are Ghost AI, a senior systems architect who designs clear architecture diagrams on a collaborative canvas.
+const SYSTEM_PROMPT = `You are Archon , a senior systems architect who designs clear architecture diagrams on a collaborative canvas.
 
 You receive the user's request and the current canvas (nodes + edges as JSON). Respond with an ordered list of canvas ACTIONS that realize the request.
 
@@ -123,7 +124,9 @@ const actionSchema = z.object({
     "add_edge",
     "delete_edge",
   ]),
-  id: z.string().describe("Target node/edge id (existing id, or a new one for adds)."),
+  id: z
+    .string()
+    .describe("Target node/edge id (existing id, or a new one for adds)."),
   label: z.string().nullish().describe("Node or edge label."),
   shape: z.enum(SHAPE_VALUES).nullish().describe("Node shape."),
   color: z.enum(COLOR_IDS).nullish().describe("Node palette color id."),
@@ -138,7 +141,9 @@ const actionSchema = z.object({
 const designSchema = z.object({
   summary: z
     .string()
-    .describe("One short sentence describing what you changed, in plain language."),
+    .describe(
+      "One short sentence describing what you changed, in plain language.",
+    ),
   actions: z.array(actionSchema).min(1),
 });
 
@@ -158,7 +163,12 @@ function resolveColor(colorId: string | null | undefined) {
  */
 async function publishAi(
   roomId: string,
-  state: { status: AiAgentStatus; message: string; thinking: boolean; cursor: { x: number; y: number } | null },
+  state: {
+    status: AiAgentStatus;
+    message: string;
+    thinking: boolean;
+    cursor: { x: number; y: number } | null;
+  },
 ) {
   const now = Date.now();
   const value: AiPresence = { ...state, updatedAt: now };
@@ -200,7 +210,7 @@ export const designAgent = task({
       // Step 1 — start: announce that the AI is reading the request.
       await publishAi(roomId, {
         status: "thinking",
-        message: "Ghost AI is reading your request…",
+        message: "Archon  is reading your request…",
         thinking: true,
         cursor: { x: 0, y: 0 },
       });
@@ -223,7 +233,7 @@ export const designAgent = task({
       // Step 2 — processing: ask Gemini to design the system as actions.
       await publishAi(roomId, {
         status: "generating",
-        message: "Ghost AI is designing your system…",
+        message: "Archon  is designing your system…",
         thinking: true,
         cursor: { x: 0, y: 0 },
       });
@@ -273,7 +283,7 @@ export const designAgent = task({
 
       await publishAi(roomId, {
         status: "applying",
-        message: "Ghost AI is laying out your design…",
+        message: "Archon  is laying out your design…",
         thinking: true,
         cursor: { x: 0, y: 0 },
       });
@@ -314,7 +324,7 @@ export const designAgent = task({
       // Step 4 — complete: rest the cursor on the last edit, then clear presence.
       await publishAi(roomId, {
         status: "complete",
-        message: object.summary || "Ghost AI finished updating the canvas.",
+        message: object.summary || "Archon  finished updating the canvas.",
         thinking: false,
         cursor,
       });
@@ -322,23 +332,26 @@ export const designAgent = task({
       // final status message visible.
       await publishAi(roomId, {
         status: "complete",
-        message: object.summary || "Ghost AI finished updating the canvas.",
+        message: object.summary || "Archon  finished updating the canvas.",
         thinking: false,
         cursor: null,
       });
 
       logger.info("design-agent finished", { roomId, applied: actions.length });
-      return { ok: true as const, summary: object.summary, applied: actions.length };
+      return {
+        ok: true as const,
+        summary: object.summary,
+        applied: actions.length,
+      };
     } catch (error) {
-      const message =
-        error instanceof Error ? error.message : "Unknown error";
+      const message = error instanceof Error ? error.message : "Unknown error";
       logger.error("design-agent failed", { roomId, error: message });
 
       // Surface the failure in the status feed and clear the AI presence so the
       // canvas is never left with a stuck "thinking" agent.
       await publishAi(roomId, {
         status: "error",
-        message: "Ghost AI ran into a problem and couldn't finish.",
+        message: "Archon  ran into a problem and couldn't finish.",
         thinking: false,
         cursor: null,
       });
@@ -373,8 +386,8 @@ function describeAction(
       return {
         position,
         message: action.label
-          ? `Ghost AI is adding “${action.label}”…`
-          : "Ghost AI is adding a component…",
+          ? `Archon  is adding “${action.label}”…`
+          : "Archon  is adding a component…",
       };
     }
     case "move_node":
@@ -383,24 +396,28 @@ function describeAction(
           action.x != null && action.y != null
             ? { x: action.x, y: action.y }
             : null,
-        message: "Ghost AI is repositioning a component…",
+        message: "Archon  is repositioning a component…",
       };
     case "resize_node":
-      return { position: null, message: "Ghost AI is resizing a component…" };
+      return { position: null, message: "Archon  is resizing a component…" };
     case "update_node_data":
-      return { position: null, message: "Ghost AI is refining a component…" };
+      return { position: null, message: "Archon  is refining a component…" };
     case "delete_node":
-      return { position: null, message: "Ghost AI is removing a component…" };
+      return { position: null, message: "Archon  is removing a component…" };
     case "add_edge": {
-      const target = action.target ? placed.get(mapNodeId(action.target)) : undefined;
-      const source = action.source ? placed.get(mapNodeId(action.source)) : undefined;
+      const target = action.target
+        ? placed.get(mapNodeId(action.target))
+        : undefined;
+      const source = action.source
+        ? placed.get(mapNodeId(action.source))
+        : undefined;
       return {
         position: target ?? source ?? null,
-        message: "Ghost AI is connecting components…",
+        message: "Archon  is connecting components…",
       };
     }
     case "delete_edge":
-      return { position: null, message: "Ghost AI is removing a connection…" };
+      return { position: null, message: "Archon  is removing a connection…" };
   }
 }
 

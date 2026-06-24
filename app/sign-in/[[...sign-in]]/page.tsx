@@ -1,11 +1,11 @@
-import { SignIn } from "@clerk/nextjs"
+import { SignIn } from "@clerk/nextjs";
 
 export default function SignInPage() {
   return (
     <div className="flex h-screen bg-background">
       <div className="hidden lg:flex lg:w-1/2 flex-col justify-center px-16 border-r border-border">
         <div className="mb-8">
-          <span className="text-lg font-semibold text-foreground">ghost AI</span>
+          <span className="text-lg font-semibold text-foreground">Archon </span>
         </div>
         <p className="text-muted-foreground text-sm mb-8">
           Design systems that think with you.
@@ -21,5 +21,5 @@ export default function SignInPage() {
         <SignIn />
       </div>
     </div>
-  )
+  );
 }
