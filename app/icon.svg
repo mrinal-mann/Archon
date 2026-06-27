@@ -1,0 +1,10 @@
+<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <mask id="archon-favicon-cutout">
+      <rect width="512" height="512" fill="white"/>
+      <path d="M216 360 L216 245 A40 40 0 0 1 296 245 L296 360 Z" fill="black"/>
+    </mask>
+  </defs>
+  <rect width="512" height="512" rx="112" fill="#0a0a0a"/>
+  <path d="M256 70 L90 360 L422 360 Z" fill="#DEDBC8" mask="url(#archon-favicon-cutout)"/>
+</svg>

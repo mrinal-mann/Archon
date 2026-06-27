@@ -4,12 +4,27 @@ import { PrismaClient } from "@/generated/prisma/client";
 
 const connectionString = process.env.DATABASE_URL;
 
+/**
+ * pg / pg-connection-string v3 will change the meaning of the `sslmode` aliases
+ * `prefer`, `require`, and `verify-ca` (today they are all treated as
+ * `verify-full`). Pin them to `verify-full` explicitly so the connection keeps
+ * the exact same behavior and security guarantees it has now, and the
+ * deprecation warning stops surfacing in the dev overlay.
+ */
+function pinSslMode(url: string | undefined): string | undefined {
+  if (!url) return url;
+  return url.replace(
+    /([?&]sslmode=)(prefer|require|verify-ca)\b/gi,
+    "$1verify-full",
+  );
+}
+
 function createPrismaClient() {
   if (connectionString?.startsWith("prisma+postgres://")) {
     return new PrismaClient({ accelerateUrl: connectionString });
   }
 
-  const adapter = new PrismaPg({ connectionString });
+  const adapter = new PrismaPg({ connectionString: pinSslMode(connectionString) });
   return new PrismaClient({ adapter });
 }
 

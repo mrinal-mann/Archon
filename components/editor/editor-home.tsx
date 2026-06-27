@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { Plus } from "lucide-react"
+import { Plus, Boxes } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { EditorNavbar } from "@/components/editor/editor-navbar"
@@ -51,20 +51,43 @@ export function EditorHome({ owned, shared }: EditorHomeProps) {
         onRenameProject={openRename}
         onDeleteProject={openDelete}
       />
-      <main className="flex min-h-0 flex-1 flex-col items-center justify-center gap-4 bg-muted/10 px-4">
-        <div className="text-center">
-          <h1 className="text-xl font-semibold text-foreground">
-            Create a project or open an existing one
-          </h1>
-          <p className="mt-2 text-sm text-muted-foreground">
-            Start a new architecture workspace, or choose a project from the
-            sidebar.
-          </p>
+      <main className="relative flex min-h-0 flex-1 flex-col items-center justify-center gap-6 overflow-hidden bg-background px-4">
+        {/* dot grid */}
+        <div
+          className="pointer-events-none absolute inset-0"
+          style={{
+            backgroundImage:
+              "radial-gradient(color-mix(in oklab, var(--foreground) 6%, transparent) 1px, transparent 1px)",
+            backgroundSize: "22px 22px",
+          }}
+        />
+        {/* warm glow */}
+        <div
+          className="pointer-events-none absolute left-1/2 top-1/3 h-72 w-72 -translate-x-1/2 rounded-full"
+          style={{
+            background:
+              "radial-gradient(circle, color-mix(in oklab, var(--primary) 9%, transparent), transparent 70%)",
+          }}
+        />
+
+        <div className="relative flex flex-col items-center gap-5 text-center">
+          <div className="flex size-14 items-center justify-center rounded-2xl border border-border bg-card">
+            <Boxes className="size-6 text-primary" />
+          </div>
+          <div>
+            <h1 className="text-2xl font-semibold text-foreground">
+              Design your next system
+            </h1>
+            <p className="mx-auto mt-2 max-w-sm text-sm text-muted-foreground">
+              Start a new architecture workspace, or open a project from the
+              sidebar and let Archon design it with you.
+            </p>
+          </div>
+          <Button size="lg" onClick={openCreate}>
+            <Plus className="size-4" />
+            New Project
+          </Button>
         </div>
-        <Button onClick={openCreate}>
-          <Plus className="size-4" />
-          New Project
-        </Button>
       </main>
 
       <CreateProjectDialog

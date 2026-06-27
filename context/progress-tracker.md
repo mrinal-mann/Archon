@@ -71,6 +71,49 @@ change.
 
 - Added Trigger.dev (background jobs) via manual setup: installed `@trigger.dev/sdk` (dep) and `@trigger.dev/build` (devDep) at `^4.4.6`. Created `trigger.config.ts` at the project root (`dirs: ["./trigger"]` since this app has no `src/`, default retries, `maxDuration: 3600`) with the `project` ref left as a `<your-project-ref>` placeholder to fill in after `npx trigger.dev@latest login`. Added a starter `trigger/example.ts` (`hello-world` task) and ignored the `.trigger` build dir in `.gitignore`. Pending user action: authenticate, set the real project ref, and add `TRIGGER_SECRET_KEY` to `.env`.
 
+- Completed public landing page for Archon:
+  - Added `/` to public routes in `proxy.ts` so unauthenticated users reach the landing page (authenticated users are still redirected to `/editor`).
+  - Created `components/landing/landing-page.tsx` (`"use client"`) with three sections — Hero, About, Features — and a footer. Uses Framer Motion for all animations (WordsPullUp, WordsPullUpMultiStyle, AnimatedChar scroll-reveal, staggered feature card entrances). Installed `framer-motion`.
+  - Fonts: Almarai (300/400/700/800) + Instrument Serif (italic 400) loaded via `next/font/google` at module scope in the component; CSS variables `--font-almarai` / `--font-instrument-serif` scoped to the `<main>` wrapper.
+  - Color palette: warm cream `#DEDBC8` / `#E1E0CC` on black (`#000000`, `#0D0D0D`, `#1A1A1A`) — same cinematic aesthetic as the Prisma reference; editor theme tokens untouched.
+  - Hero: full-viewport inset with a rounded container; animated particle-node canvas background (canvas API, 55 nodes, cream color, real-time RAF loop); SVG fractal-noise overlay; gradient vignette; top-center pill navbar; letter-by-letter "ARCHON" pull-up animation; description + "Start designing" CTA button.
+  - About: `#0D0D0D` card; label "AI Systems Architect"; WordsPullUpMultiStyle heading mixing Almarai and Instrument Serif italic ("I am Archon, / your AI systems architect. / I design distributed systems…"); scroll-linked character-level opacity reveal for the body paragraph.
+  - Features: min-h-screen with bg-noise overlay; section heading with two-line WordsPullUpMultiStyle; four-column card grid — animated node-canvas card ("Your design canvas."), plus AI Architecture / Smart Review / Live Specs cards (Lucide icons, numbered, checklist with Check icons, "Learn more" link).
+  - Added `.noise-overlay` and `.bg-noise` SVG fractal-noise utilities to `app/globals.css`.
+  - Updated `context/ui-context.md` with the landing color palette, landing font table, and noise texture documentation.
+  - `npm run build` passes (TypeScript clean).
+- Expanded landing page with product detail + an animated "how it works" demo (`components/landing/product-sections.tsx`):
+  - `HowItWorksSection`: a code-driven animated diagram demo (chosen over a frame-by-frame image sequence — zero image assets, on-brand, swappable for a real `<video>` later). A mock editor window types out a prompt (`Typewriter`), then nodes spawn one-by-one and SVG edges draw via `pathLength`, ending in a "Spec generated" chip; the whole sequence loops every ~9.5s while in view. Followed by three numbered steps (Describe → Archon designs → Refine & export).
+  - `StatsStrip`: four headline stats (< 5s, 6+ patterns, ∞ collaborators, 1-click specs).
+  - `CapabilitiesSection`: six capability cards (AI design agent, real-time collaboration, conversational refinement, smart review, one-click specs, private by default) in a hairline-bordered grid.
+  - `CTASection`: final call-to-action with badge, large headline, primary + secondary buttons.
+  - Composed into `landing-page.tsx`: Hero → About → HowItWorks → Features → Stats → Capabilities → CTA → Footer. Reuses the cream/black palette and Almarai font via the shared `<main>` font-variable scope.
+  - `npm run build` passes (TypeScript clean).
+
+- Applied the Archon cream-on-black brand theme across the whole product (landing + auth + app):
+  - **Navbar (landing)**: nav items now map to real page sections — Overview→`#about`, How it works→`#how`, Features→`#features`, Capabilities→`#capabilities`, Sign in→`/sign-in`. Added matching `id` + `scroll-mt-20` to each section and `scroll-smooth` on `<html>`. "Sign in" is emphasized (bold cream).
+  - **Sign-in / sign-up redesign**: new `components/auth/auth-shell.tsx` (client) — a two-panel layout with an animated left brand panel (Framer Motion staggered wordmark, eyebrow, heading, a mini animated connected-node graphic with drawing edges, and feature bullets) over a dot-grid + glow + noise backdrop, and a right panel hosting the Clerk form with a custom heading, mode-switch link, and "Back to home". The Clerk `<SignIn>`/`<SignUp>` cards are made transparent/borderless (header+footer hidden) so they blend into the themed panel. Pages stay server components rendering `<AuthShell mode=…>{<SignIn/>}</AuthShell>`.
+  - **App re-theme (dashboard, sidebar, editor, editor navbar, AI chat, canvas, dialogs)**: swapped the shadcn semantic token values in `app/globals.css` from the grayscale palette to the cream-on-black palette (`--background #0a0a0a`, `--foreground/#e1e0cc`, `--primary #dedbc8` with dark `--primary-foreground`, warm muted/border/ring). Because every editor component already uses semantic tokens (verified: zero hardcoded colors), the entire authenticated app inherits the brand theme with no per-component edits. Updated `ClerkProvider` appearance variables in `app/layout.tsx` to match (cream primary/foreground, dark surface) so the `UserButton` and any Clerk UI are on-theme.
+  - **Targeted polish**: added an `ARCHON` wordmark to the editor navbar left section (`components/editor/editor-navbar.tsx`); redesigned the dashboard empty state (`components/editor/editor-home.tsx`) with a dot-grid + warm glow backdrop, a bordered `Boxes` brand glyph, a larger headline, and a primary CTA — all token-driven.
+  - Updated `context/ui-context.md` color table + Clerk note to the new cream theme.
+  - `npm run build` passes (TypeScript clean).
+
+- Brand logo + editor chrome polish + DB warning fix:
+  - **pg SSL deprecation warning fixed**: `lib/prisma.ts` now pins `sslmode=prefer|require|verify-ca` → `sslmode=verify-full` (via `pinSslMode()`) before handing the connection string to `PrismaPg`. The aliases already resolve to `verify-full` today, so this preserves the exact connection behavior/security while silencing the `pg-connection-string` v3 deprecation warning that was surfacing in the Next.js dev error overlay on `/editor`.
+  - **Archon logo component**: added `components/brand/archon-logo.tsx` — the user's triangular arch monogram as an inline SVG, filled with `currentColor` so it themes via `text-*` utilities (cream `text-primary` in the app, inline cream on the landing/auth pages).
+  - **Logo placed everywhere a wordmark appears**: editor navbar (left lockup beside ARCHON), project sidebar header, AI sidebar header + empty state, auth shell (desktop + mobile wordmarks), landing hero (top-left lockup) and footer.
+  - **Project sidebar redesign** (`components/editor/project-sidebar.tsx`): `rounded-xl` + `bg-card/95 backdrop-blur` floating panel, logo in header, primary-accent active tabs (matching the AI sidebar), and richer project rows — leading status dot, left accent bar + `bg-accent` for the active project, softer hover, and a two-line empty state with a `FolderOpen` glyph.
+  - **AI sidebar redesign** (`components/editor/ai-sidebar.tsx`): `rounded-xl` panel, header/empty-state icon swapped from generic `Bot` to the Archon logo in bordered tiles, and the starter prompts restyled as full-width bordered list buttons with a primary hover edge. Chat/run logic untouched.
+  - **Editor navbar** (`components/editor/editor-navbar.tsx`): `bg-background/85 backdrop-blur` and the logo lockup; sidebar `top-15`/height offsets unchanged.
+  - `npm run build` passes (TypeScript clean).
+
+- Branding metadata, favicon, navbar logo link + AI-toggle brand mark:
+  - **Metadata / naming**: replaced the default "Create Next App" metadata in `app/layout.tsx` with an Archon title template (`default: "Archon — AI Systems Architect"`, `template: "%s · Archon"`) + branded description + `applicationName`. Landing (`app/page.tsx`) uses `title.absolute` so it isn't double-suffixed; sign-in → "Sign in · Archon", sign-up → "Create account · Archon" via per-page `metadata`.
+  - **Favicon**: added `app/icon.svg` (Next.js auto-detects it) — the Archon arch mark in cream on a rounded near-black tile so it's legible on light or dark browser tabs.
+  - **Editor logo → home**: the editor navbar wordmark/logo is now a `next/link` to `/editor` (the project dashboard home) with a hover affordance, so clicking ARCHON inside a project returns to the home screen.
+  - **AI-toggle branded**: swapped the generic `Sparkles` AI-assistant toggle in `components/editor/editor-workspace.tsx` for the `ArchonLogo`, with a filled cream (`bg-primary`) active state when the AI sidebar is open, so the control reads as "Archon AI" rather than a generic AI icon.
+  - `npm run build` passes (TypeScript clean).
+
 ## In Progress
 
 - None.

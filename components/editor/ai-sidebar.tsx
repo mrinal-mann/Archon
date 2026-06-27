@@ -8,7 +8,7 @@ import {
   useState,
   type KeyboardEvent,
 } from "react";
-import { Bot, Loader2, Send, X } from "lucide-react";
+import { Loader2, Send, X } from "lucide-react";
 import { LiveList } from "@liveblocks/client";
 import { useMutation, useRoom, useSelf, useStorage } from "@liveblocks/react";
 import { useRealtimeRun } from "@trigger.dev/react-hooks";
@@ -19,6 +19,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { SpecsPanel } from "@/components/editor/specs-panel";
+import { ArchonLogo } from "@/components/brand/archon-logo";
 import { cn } from "@/lib/utils";
 import {
   AI_CHAT_KEY,
@@ -294,20 +295,25 @@ function ArchitectTab() {
         <div className="p-3">
           {messages.length === 0 ? (
             <div className="flex flex-col items-center gap-4 px-2 py-10 text-center">
-              <div className="flex size-12 items-center justify-center rounded-full bg-muted">
-                <Bot className="size-6 text-foreground" />
+              <div className="flex size-14 items-center justify-center rounded-2xl border border-border bg-muted/40">
+                <ArchonLogo size={26} className="text-primary" />
               </div>
-              <p className="max-w-[16rem] text-sm text-muted-foreground">
-                Describe the system you want and Archon will design it on the
-                canvas. Start with a prompt below.
-              </p>
-              <div className="flex flex-wrap justify-center gap-2">
+              <div>
+                <p className="text-sm font-medium text-foreground">
+                  Design with Archon
+                </p>
+                <p className="mx-auto mt-1.5 max-w-[16rem] text-sm text-muted-foreground">
+                  Describe the system you want and Archon will design it on the
+                  canvas in real time.
+                </p>
+              </div>
+              <div className="flex w-full flex-col gap-1.5">
                 {STARTER_PROMPTS.map((prompt) => (
                   <button
                     key={prompt}
                     type="button"
                     onClick={() => setDraft(prompt)}
-                    className="rounded-full bg-muted px-3 py-1.5 text-xs text-foreground transition-colors hover:bg-accent"
+                    className="w-full rounded-lg border border-border bg-muted/40 px-3 py-2 text-left text-xs text-foreground transition-colors hover:border-primary/40 hover:bg-accent"
                   >
                     {prompt}
                   </button>
@@ -383,18 +389,18 @@ export function AiSidebar({ isOpen, onClose, className }: AiSidebarProps) {
       data-state={isOpen ? "open" : "closed"}
       aria-hidden={!isOpen}
       className={cn(
-        "fixed right-3 top-15 z-40 flex h-[calc(100dvh-4.5rem)] w-[min(22rem,calc(100vw-1.5rem))] flex-col overflow-hidden rounded-lg border border-border bg-card/95 text-card-foreground shadow-2xl shadow-background/50 backdrop-blur transition-transform duration-200 ease-out",
+        "fixed right-3 top-15 z-40 flex h-[calc(100dvh-4.5rem)] w-[min(22rem,calc(100vw-1.5rem))] flex-col overflow-hidden rounded-xl border border-border bg-card/95 text-card-foreground shadow-2xl shadow-background/60 backdrop-blur transition-transform duration-200 ease-out",
         isOpen ? "translate-x-0" : "translate-x-[calc(100%+1.5rem)]",
         className,
       )}
     >
       <div className="flex shrink-0 items-start justify-between gap-2 border-b border-border px-3 py-2.5">
         <div className="flex items-center gap-2.5">
-          <div className="flex size-8 shrink-0 items-center justify-center rounded-md bg-muted">
-            <Bot className="size-4 text-foreground" />
+          <div className="flex size-8 shrink-0 items-center justify-center rounded-lg border border-border bg-muted/40">
+            <ArchonLogo size={17} className="text-primary" />
           </div>
           <div className="min-w-0">
-            <h2 className="text-sm font-medium text-foreground">
+            <h2 className="text-sm font-semibold text-foreground">
               AI Workspace
             </h2>
             <p className="text-xs text-muted-foreground">

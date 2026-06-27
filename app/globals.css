@@ -48,41 +48,45 @@
     --radius-4xl: calc(var(--radius) * 2.6);
 }
 
+/* ─── Archon cream-on-black theme ───────────────────────────────────────────
+   Mirrors the landing palette (#DEDBC8 / #E1E0CC cream on near-black) so the
+   entire authenticated app — dashboard, sidebar, editor, AI chat — inherits
+   the brand theme through the shadcn semantic tokens. */
 .dark,
 :root {
     color-scheme: dark;
-    --background: oklch(0.145 0 0);
-    --foreground: oklch(0.985 0 0);
-    --card: oklch(0.205 0 0);
-    --card-foreground: oklch(0.985 0 0);
-    --popover: oklch(0.205 0 0);
-    --popover-foreground: oklch(0.985 0 0);
-    --primary: oklch(0.922 0 0);
-    --primary-foreground: oklch(0.205 0 0);
-    --secondary: oklch(0.269 0 0);
-    --secondary-foreground: oklch(0.985 0 0);
-    --muted: oklch(0.269 0 0);
-    --muted-foreground: oklch(0.708 0 0);
-    --accent: oklch(0.269 0 0);
-    --accent-foreground: oklch(0.985 0 0);
+    --background: #0a0a0a;
+    --foreground: #e1e0cc;
+    --card: #141413;
+    --card-foreground: #e1e0cc;
+    --popover: #161614;
+    --popover-foreground: #e1e0cc;
+    --primary: #dedbc8;
+    --primary-foreground: #0a0a0a;
+    --secondary: #201f1c;
+    --secondary-foreground: #e1e0cc;
+    --muted: #1a1a17;
+    --muted-foreground: #9d9c8d;
+    --accent: #26261f;
+    --accent-foreground: #e1e0cc;
     --destructive: oklch(0.704 0.191 22.216);
-    --border: oklch(1 0 0 / 10%);
-    --input: oklch(1 0 0 / 15%);
-    --ring: oklch(0.556 0 0);
-    --chart-1: oklch(0.87 0 0);
-    --chart-2: oklch(0.556 0 0);
-    --chart-3: oklch(0.439 0 0);
-    --chart-4: oklch(0.371 0 0);
-    --chart-5: oklch(0.269 0 0);
+    --border: rgba(222, 219, 200, 0.12);
+    --input: rgba(222, 219, 200, 0.16);
+    --ring: rgba(222, 219, 200, 0.45);
+    --chart-1: #dedbc8;
+    --chart-2: #c6b8db;
+    --chart-3: #9db4c0;
+    --chart-4: #c9d7b0;
+    --chart-5: #d9b8a0;
     --radius: 0.625rem;
-    --sidebar: oklch(0.205 0 0);
-    --sidebar-foreground: oklch(0.985 0 0);
-    --sidebar-primary: oklch(0.488 0.243 264.376);
-    --sidebar-primary-foreground: oklch(0.985 0 0);
-    --sidebar-accent: oklch(0.269 0 0);
-    --sidebar-accent-foreground: oklch(0.985 0 0);
-    --sidebar-border: oklch(1 0 0 / 10%);
-    --sidebar-ring: oklch(0.556 0 0);
+    --sidebar: #111110;
+    --sidebar-foreground: #e1e0cc;
+    --sidebar-primary: #dedbc8;
+    --sidebar-primary-foreground: #0a0a0a;
+    --sidebar-accent: #26261f;
+    --sidebar-accent-foreground: #e1e0cc;
+    --sidebar-border: rgba(222, 219, 200, 0.1);
+    --sidebar-ring: rgba(222, 219, 200, 0.4);
 }
 
 @layer base {
@@ -95,4 +99,18 @@
   html {
     @apply font-sans;
     }
+}
+
+/* ─── Landing page noise textures ─────────────────────────────────────────── */
+
+.noise-overlay {
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n1'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n1)'/%3E%3C/svg%3E");
+  background-size: 200px 200px;
+  background-repeat: repeat;
+}
+
+.bg-noise {
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n2'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n2)'/%3E%3C/svg%3E");
+  background-size: 200px 200px;
+  background-repeat: repeat;
 }

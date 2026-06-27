@@ -13,6 +13,12 @@
       "skillPath": "skills/liveblocks-best-practices/SKILL.md",
       "computedHash": "df4f54f66e81c580d25c5fee989768368837df694ab63c0f4a0fd70500cd16af"
     },
+    "premium-frontend-ui": {
+      "source": "github/awesome-copilot",
+      "sourceType": "github",
+      "skillPath": "skills/premium-frontend-ui/SKILL.md",
+      "computedHash": "e7f3d02a0233beafdd6fe5335427388109b9699ebcdc6a8782a8bada2826d916"
+    },
     "prisma-cli": {
       "source": "prisma/skills",
       "sourceType": "github",

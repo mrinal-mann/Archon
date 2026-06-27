@@ -1,10 +1,12 @@
 "use client"
 
 import { useCallback, useRef, useState } from "react"
-import { Share2, Sparkles } from "lucide-react"
+import { Share2 } from "lucide-react"
 import { LiveblocksProvider, RoomProvider } from "@liveblocks/react/suspense"
 
 import { Button } from "@/components/ui/button"
+import { ArchonLogo } from "@/components/brand/archon-logo"
+import { cn } from "@/lib/utils"
 import { AiSidebar } from "@/components/editor/ai-sidebar"
 import { CanvasRoom } from "@/components/editor/canvas/canvas-room"
 import { EditorNavbar } from "@/components/editor/editor-navbar"
@@ -87,8 +89,12 @@ export function EditorWorkspace({
               aria-label="Toggle AI assistant"
               aria-pressed={aiOpen}
               onClick={() => setAiOpen((prev) => !prev)}
+              className={cn(
+                "transition-colors",
+                aiOpen && "bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground"
+              )}
             >
-              <Sparkles className="size-5" />
+              <ArchonLogo size={17} className="text-current" />
             </Button>
           </>
         }
